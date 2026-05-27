@@ -1,0 +1,92 @@
+{
+  "workflow_id": "2026-05-27T16:20:11.345678",
+  "status": "success",
+  "well_name": "Eastern Prospect-003",
+  "analysis_type": "quick",
+  "timestamp": "2026-05-27T16:22:30.654321",
+  "execution_time_seconds": 125,
+  "seismic_analysis": "skipped - quick analysis mode",
+  "well_log_analysis": "skipped - quick analysis mode",
+  "reservoir_analysis": "skipped - quick analysis mode",
+  "risk_assessment": {
+    "status": "success",
+    "findings": {
+      "trap_evaluation": {
+        "trap_type": "structural - anticline",
+        "closure_area_sq_km": 8.2,
+        "trap_integrity": 0.78,
+        "spill_point_depth_m": 1900,
+        "risk_assessment": "Moderate",
+        "interpretation": "Shallow anticline with adequate closure. Some seal uncertainty in shallow depths."
+      },
+      "volumetric_estimates": {
+        "gross_rock_volume_mmbbl": 25.0,
+        "stock_tank_volume_mmbbl": 28.65,
+        "recovery_factor": 0.08,
+        "recoverable_reserves_mmbbl": 2.3,
+        "interpretation": "Modest volumes (2.3 MMbbl) with high uncertainty. Suitable for farm-out discussions."
+      },
+      "seal_integrity": {
+        "seal_type": "Shale/Evaporite",
+        "seal_thickness_m": 120,
+        "seal_integrity_score": 0.78,
+        "leakage_risk": "Moderate",
+        "confidence": 0.68,
+        "interpretation": "Moderate seal quality. Some leakage potential in shallow water environment."
+      }
+    }
+  },
+  "final_report": {
+    "status": "success",
+    "executive_summary": {
+      "overall_confidence": 0.72,
+      "risk_category": "Moderate",
+      "recommendation": "Viable exploration prospect. Suitable for partner/farm-out discussions.",
+      "key_findings": [
+        "Shallow anticline structure with adequate closure geometry",
+        "Estimated 2.3 MMbbl recoverable oil with moderate confidence",
+        "Seal integrity moderate due to shallow burial and complex stratigraphy",
+        "Drilling cost-effective at $2.8M with quick payback if successful",
+        "Low-risk opportunity appropriate for new venture partnerships"
+      ]
+    },
+    "business_recommendations": [
+      "Prepare detailed farm-out package for operator solicitation",
+      "Conduct additional 2D seismic reprocessing to reduce seal uncertainty",
+      "Approach major operators with shallow water capability",
+      "Target 50% back-in with 25% carry on first well"
+    ],
+    "drilling_recommendations": {
+      "well_type": "Shallow water vertical exploration well",
+      "target_depth": 1900,
+      "estimated_cost": "$2.8M",
+      "drilling_hazards": "Shallow formations - lost circulation possible",
+      "success_probability": 0.62
+    },
+    "next_steps": [
+      "Finalize farm-out presentation package (2 weeks)",
+      "Distribute to potential partners (ongoing)",
+      "License farmout well design (upon partnership selection)",
+      "Partner execution of drilling phase (6-12 months)"
+    ],
+    "farm_out_metrics": {
+      "minimum_bid_acres": 5000,
+      "suggested_carry": "25% on first well",
+      "back_in_percentage": 50,
+      "npv_per_acre": 450
+    }
+  },
+  "workflow_status": {
+    "agents_executed": [
+      "exploration_risk_assessor",
+      "report_generator"
+    ],
+    "agents_skipped": [
+      "seismic_analyzer",
+      "well_log_interpreter",
+      "reservoir_characterizer"
+    ],
+    "total_errors": 0,
+    "execution_mode": "quick"
+  }
+}

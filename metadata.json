@@ -1,0 +1,55 @@
+{
+  "use_case_id": "6",
+  "name": "Oil & Gas Analytics Multi-Agent System",
+  "version": "1.0.0",
+  "description": "Production-ready multi-agent AI system using LangGraph for oil & gas exploration, well analysis, and reservoir characterization",
+  "author": "LangGraph Analytics Team",
+  "license": "MIT",
+  "agents": [
+    {
+      "name": "SeismicAnalyzer",
+      "description": "Analyzes seismic data for subsurface structures and hydrocarbon indicators",
+      "capabilities": ["fault detection", "horizon picking", "amplitude analysis"]
+    },
+    {
+      "name": "WellLogInterpreter",
+      "description": "Interprets well log data for lithology and fluid detection",
+      "capabilities": ["lithology classification", "fluid identification", "porosity estimation"]
+    },
+    {
+      "name": "ReservoirCharacterizer",
+      "description": "Characterizes reservoir properties and connectivity",
+      "capabilities": ["permeability estimation", "saturation analysis", "pressure prediction"]
+    },
+    {
+      "name": "ExplorationRiskAssessor",
+      "description": "Assesses exploration risks and opportunities",
+      "capabilities": ["risk analysis", "trap evaluation", "volumetric estimation"]
+    },
+    {
+      "name": "ReportGenerator",
+      "description": "Synthesizes analysis from all agents into comprehensive reports",
+      "capabilities": ["summary generation", "recommendation formulation", "visualization"]
+    }
+  ],
+  "capabilities": [
+    "Multi-well analysis",
+    "Seismic interpretation",
+    "Reservoir characterization",
+    "Risk assessment",
+    "Volumetric calculation",
+    "Trend analysis"
+  ],
+  "data_sources": [
+    "Well logs (LAS format)",
+    "Seismic data (SEG-Y)",
+    "Core analysis data",
+    "Production history"
+  ],
+  "deployment": {
+    "api_port": 8000,
+    "ui_port": 8001,
+    "entry_point": "run.py",
+    "docker_support": true
+  }
+}

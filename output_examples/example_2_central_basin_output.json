@@ -1,0 +1,173 @@
+{
+  "workflow_id": "2026-05-27T15:45:22.987654",
+  "status": "success",
+  "well_name": "Central Basin-002",
+  "analysis_type": "full",
+  "timestamp": "2026-05-27T15:50:45.123456",
+  "execution_time_seconds": 295,
+  "seismic_analysis": {
+    "status": "success",
+    "findings": {
+      "amplitude_analysis": {
+        "mean_amplitude": 1.95,
+        "std_amplitude": 1.12,
+        "max_amplitude": 3.5,
+        "bright_spot_count": 4,
+        "anomaly_ratio": 0.36,
+        "interpretation": "Strong hydrocarbon indicators. Multiple bright spots in shallow-to-mid depths suggest prolific gas system."
+      },
+      "fault_detection": {
+        "fault_count": 1,
+        "fault_depths": [2800],
+        "fault_severity": 0.72,
+        "risk_level": "LOW",
+        "interpretation": "Single growth fault with excellent seal properties. Fault-bounded trap geometry confirmed."
+      },
+      "horizon_picking": {
+        "horizons_picked": 5,
+        "top_horizons": [
+          {
+            "depth": 1900,
+            "amplitude": 3.5,
+            "quality": "excellent"
+          },
+          {
+            "depth": 1800,
+            "amplitude": 3.2,
+            "quality": "excellent"
+          },
+          {
+            "depth": 2400,
+            "amplitude": 2.8,
+            "quality": "very good"
+          }
+        ],
+        "coverage": 45.5
+      }
+    }
+  },
+  "well_log_analysis": {
+    "status": "success",
+    "findings": {
+      "lithology_classification": {
+        "primary_lithology": "Sandstone (potential reservoir)",
+        "gamma_ray_avg": 95.75,
+        "resistivity_avg": 99.875,
+        "quality_score": 0.74,
+        "interpretation": "Multiple clean sand intervals stacked vertically. Exceptional reservoir quality across formation."
+      },
+      "fluid_identification": {
+        "primary_fluid": "Gas bearing",
+        "confidence": 0.88,
+        "resistivity_avg": 99.875,
+        "porosity_avg": 17.0,
+        "interpretation": "Very high resistivity indicates gas-bearing sections. Minimal water saturation (10%)."
+      },
+      "porosity_estimation": {
+        "average_porosity": 17.0,
+        "max_porosity": 30.0,
+        "min_porosity": 5.0,
+        "porosity_quality": "Good",
+        "interpretation": "Excellent porosity development in sand bodies. Zones >28% porosity represent premium pay."
+      }
+    }
+  },
+  "reservoir_analysis": {
+    "status": "success",
+    "findings": {
+      "permeability_estimation": {
+        "estimated_permeability_md": 4913.0,
+        "permeability_class": "High",
+        "basis": "Porosity-based estimation (17.0% avg porosity)",
+        "interpretation": "High permeability suitable for gas production. Expected high decline curves post-production."
+      },
+      "saturation_analysis": {
+        "water_saturation": 0.1,
+        "hydrocarbon_saturation": 0.9,
+        "saturation_confidence": 0.88,
+        "interpretation": "Exceptional hydrocarbon saturation (90%) across multiple stacked sand intervals."
+      },
+      "pressure_prediction": {
+        "predicted_pressure_psi": 3025,
+        "normal_pressure_gradient": 0.465,
+        "abnormal_pressure": false,
+        "interpretation": "Normal hydrostatic pressure regime. Gas bearing with no pressure depletion concerns."
+      }
+    }
+  },
+  "risk_assessment": {
+    "status": "success",
+    "findings": {
+      "trap_evaluation": {
+        "trap_type": "fault-bounded structural",
+        "closure_area_sq_km": 18.5,
+        "trap_integrity": 0.92,
+        "spill_point_depth_m": 2750,
+        "risk_assessment": "Very Low",
+        "interpretation": "Large, well-defined trap with excellent seal. Growth fault provides high-quality trap geometry."
+      },
+      "volumetric_estimates": {
+        "gross_rock_volume_mmbbl": 75.0,
+        "stock_tank_volume_mmbbl": 112.65,
+        "recovery_factor": 0.15,
+        "recoverable_reserves_mmbbl": 16.9,
+        "interpretation": "Significant gas reserves (16.9 BCF equivalent). Multiple stacked intervals provide volume."
+      },
+      "seal_integrity": {
+        "seal_type": "Shale",
+        "seal_thickness_m": 350,
+        "seal_integrity_score": 0.92,
+        "leakage_risk": "Very Low",
+        "confidence": 0.92,
+        "interpretation": "Exceptionally thick and competent seal (350m). World-class trapping geometry."
+      }
+    }
+  },
+  "final_report": {
+    "status": "success",
+    "executive_summary": {
+      "overall_confidence": 0.88,
+      "risk_category": "Very Low",
+      "recommendation": "Immediate drilling recommended. Fast-track development plan warranted.",
+      "key_findings": [
+        "Multiple stacked gas-bearing sand intervals identified on seismic",
+        "Well logs confirm 90% hydrocarbon saturation and excellent porosity (17% avg)",
+        "Fault-bounded trap with 92% seal integrity - exceptional trap quality",
+        "Estimated 16.9 MMbbl (gas equivalent) recoverable reserves",
+        "No drilling hazards. Normal pressure regime."
+      ]
+    },
+    "technical_recommendations": [
+      "Fast-track 3D seismic acquisition over entire prospect block",
+      "Design multi-well development to exploit stacked intervals",
+      "Plan appraisal well to confirm reservoir connectivity across faults",
+      "Initiate compression and export feasibility studies immediately"
+    ],
+    "drilling_recommendations": {
+      "well_type": "Deviated multi-pay exploration/appraisal well",
+      "target_depth": 2750,
+      "estimated_cost": "$6.2M",
+      "drilling_hazards": "None",
+      "success_probability": 0.85
+    },
+    "next_steps": [
+      "Executive sign-off (1 week)",
+      "Accelerated well design and AFE approval (2 weeks)",
+      "Rig selection and contracting (3 weeks)",
+      "Rig mobilization and spud (4 weeks)",
+      "Drilling and sampling program (3 months)",
+      "Production testing phase 1 (2 months)"
+    ]
+  },
+  "workflow_status": {
+    "agents_executed": [
+      "seismic_analyzer",
+      "well_log_interpreter",
+      "reservoir_characterizer",
+      "exploration_risk_assessor",
+      "report_generator"
+    ],
+    "total_errors": 0,
+    "warnings": []
+  }
+}

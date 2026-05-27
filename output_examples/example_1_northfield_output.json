@@ -1,0 +1,194 @@
+{
+  "workflow_id": "2026-05-27T14:30:45.123456",
+  "status": "success",
+  "well_name": "North Field-001",
+  "analysis_type": "full",
+  "timestamp": "2026-05-27T14:35:12.654321",
+  "execution_time_seconds": 287,
+  "seismic_analysis": {
+    "status": "success",
+    "agent": "seismic_analyzer",
+    "findings": {
+      "amplitude_analysis": {
+        "mean_amplitude": 1.67,
+        "std_amplitude": 0.81,
+        "max_amplitude": 3.2,
+        "bright_spot_count": 3,
+        "anomaly_ratio": 0.3,
+        "interpretation": "Potential hydrocarbon indicators detected. Three significant amplitude anomalies suggest possible gas-bearing sandstones."
+      },
+      "fault_detection": {
+        "fault_count": 2,
+        "fault_depths": [2300, 2500],
+        "fault_severity": 0.85,
+        "risk_level": "MEDIUM",
+        "interpretation": "Two moderate fault structures detected. Both dip toward the main trap. No sealing concerns identified."
+      },
+      "horizon_picking": {
+        "horizons_picked": 4,
+        "top_horizons": [
+          {
+            "depth": 1500,
+            "amplitude": 3.2,
+            "quality": "excellent"
+          },
+          {
+            "depth": 1400,
+            "amplitude": 3.2,
+            "quality": "excellent"
+          },
+          {
+            "depth": 2100,
+            "amplitude": 2.8,
+            "quality": "good"
+          }
+        ],
+        "coverage": 40.0
+      }
+    }
+  },
+  "well_log_analysis": {
+    "status": "success",
+    "agent": "well_log_interpreter",
+    "findings": {
+      "lithology_classification": {
+        "primary_lithology": "Sandstone (potential reservoir)",
+        "gamma_ray_avg": 95.75,
+        "resistivity_avg": 89.75,
+        "quality_score": 0.71,
+        "interpretation": "Moderate gamma ray values with high resistivity indicate clean sandstone. Excellent reservoir potential."
+      },
+      "fluid_identification": {
+        "primary_fluid": "Oil bearing",
+        "confidence": 0.87,
+        "resistivity_avg": 89.75,
+        "porosity_avg": 18.5,
+        "interpretation": "High resistivity combined with moderate porosity strongly suggests oil-bearing formation. Water saturation estimated at 25%."
+      },
+      "porosity_estimation": {
+        "average_porosity": 18.5,
+        "max_porosity": 28.0,
+        "min_porosity": 6.0,
+        "porosity_quality": "Good",
+        "interpretation": "Average 18.5% porosity indicates good primary porosity. Zones >25% porosity represent primary pay intervals."
+      }
+    }
+  },
+  "reservoir_analysis": {
+    "status": "success",
+    "agent": "reservoir_characterizer",
+    "findings": {
+      "permeability_estimation": {
+        "estimated_permeability_md": 6318.5,
+        "permeability_class": "High",
+        "basis": "Porosity-based estimation (18.5% avg porosity)",
+        "interpretation": "High permeability (6,300 md) indicates excellent flow capacity. Formation should produce at economic rates."
+      },
+      "saturation_analysis": {
+        "water_saturation": 0.25,
+        "hydrocarbon_saturation": 0.75,
+        "saturation_confidence": 0.75,
+        "interpretation": "75% hydrocarbon saturation confirms productive formation. Limited water encroachment expected."
+      },
+      "pressure_prediction": {
+        "predicted_pressure_psi": 2750,
+        "normal_pressure_gradient": 0.465,
+        "abnormal_pressure": false,
+        "interpretation": "Predicted pressure of 2,750 psi consistent with normal hydrostatic gradient. No pressure surprises anticipated."
+      }
+    }
+  },
+  "risk_assessment": {
+    "status": "success",
+    "agent": "exploration_risk_assessor",
+    "findings": {
+      "trap_evaluation": {
+        "trap_type": "structural",
+        "closure_area_sq_km": 12.5,
+        "trap_integrity": 0.85,
+        "spill_point_depth_m": 2450,
+        "risk_assessment": "Low to Moderate",
+        "interpretation": "Structural trap geometry is well-defined with 85% seal integrity. Multiple faults provide compartmentalization."
+      },
+      "volumetric_estimates": {
+        "gross_rock_volume_mmbbl": 50.0,
+        "stock_tank_volume_mmbbl": 62.425,
+        "recovery_factor": 0.1,
+        "recoverable_reserves_mmbbl": 6.24,
+        "interpretation": "Conservative volumetric estimate of 6.2 MMbbl recoverable oil. Upside potential if traps are connected."
+      },
+      "seal_integrity": {
+        "seal_type": "Shale",
+        "seal_thickness_m": 200,
+        "seal_integrity_score": 0.9,
+        "leakage_risk": "Low",
+        "confidence": 0.85,
+        "interpretation": "Thick shale seal (200m) with high integrity score. Minimal risk of vertical leakage."
+      }
+    }
+  },
+  "final_report": {
+    "status": "success",
+    "agent": "report_generator",
+    "executive_summary": {
+      "overall_confidence": 0.82,
+      "risk_category": "Low to Moderate",
+      "recommendation": "Proceed to drilling phase",
+      "key_findings": [
+        "Seismic shows three amplitude anomalies consistent with hydrocarbon accumulation",
+        "Well logs confirm 18.5% average porosity with 75% hydrocarbon saturation",
+        "Trap geometry is well-defined with 85% seal integrity",
+        "Estimated 6.2 MMbbl recoverable oil with upside potential",
+        "Formation pressure within normal range - no drilling hazards expected"
+      ]
+    },
+    "technical_recommendations": [
+      "Acquire 3D seismic over adjacent lease blocks to delineate trap extent",
+      "Design horizontal well to maximize pay exposure (estimated 400ft vertical thickness)",
+      "Implement logging while drilling (LWD) to optimize real-time drilling decisions",
+      "Plan water injection study post-drilling to assess reservoir connectivity"
+    ],
+    "drilling_recommendations": {
+      "well_type": "Vertical exploration well",
+      "target_depth": 2450,
+      "estimated_cost": "$4.5M",
+      "drilling_hazards": "None major",
+      "success_probability": 0.78
+    },
+    "next_steps": [
+      "Board approval for drilling (estimated 2-3 weeks)",
+      "Finalize well design and AFE (4 weeks)",
+      "Rig mobilization and spud (6-8 weeks)",
+      "Drilling and completion (3-4 months)",
+      "Production testing and evaluation (1-2 months)"
+    ],
+    "visualizations": [
+      {
+        "type": "seismic_cross_section",
+        "title": "Interpreted Seismic Line - North Field-001",
+        "description": "Vertical cross-section showing trap geometry, fault blocks, and bright spot anomalies"
+      },
+      {
+        "type": "well_log_composite",
+        "title": "Composite Well Log Plot",
+        "description": "GR, Resistivity, and Porosity logs with lithology interpretation"
+      },
+      {
+        "type": "volumetric_sensitivity",
+        "title": "Volumetric Sensitivity Analysis",
+        "description": "Range of estimates based on GRV, porosity, and saturation variations"
+      }
+    ]
+  },
+  "workflow_status": {
+    "agents_executed": [
+      "seismic_analyzer",
+      "well_log_interpreter",
+      "reservoir_characterizer",
+      "exploration_risk_assessor",
+      "report_generator"
+    ],
+    "total_errors": 0,
+    "warnings": []
+  }
+}
