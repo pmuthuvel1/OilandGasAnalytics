@@ -3,7 +3,7 @@
 ## 🚀 Starting the System
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.12+
 - OpenAI API Key (for GPT-4)
 - 8GB RAM recommended
 
@@ -19,6 +19,36 @@ copy .env.example .env
 # Edit .env and add your OpenAI API Key
 # OPENAI_API_KEY=sk-your-key-here
 ```
+
+#### LLM Configuration Options
+
+The system supports OpenAI's official API and OpenAI-compatible providers. Configure via `.env` file:
+
+**Option 1: OpenAI Official API (Default)**
+```env
+OPENAI_API_KEY=sk-your-key-here
+OPENAI_MODEL=gpt-4
+OPENAI_BASE_URL=          # Leave empty for official API
+```
+
+**Option 2: Alternative LLM Provider (OpenAI-Compatible)**
+```env
+OPENAI_API_KEY=your-api-key
+OPENAI_MODEL=gpt-4        # Or compatible model name
+OPENAI_BASE_URL=https://api.core42.ai/v1
+```
+
+**Option 3: Local LLM Server**
+```env
+OPENAI_API_KEY=local-key
+OPENAI_MODEL=your-model
+OPENAI_BASE_URL=http://localhost:8000/v1
+```
+
+**Environment Variables:**
+- `OPENAI_API_KEY` - API key for LLM provider (required)
+- `OPENAI_BASE_URL` - Base URL for API endpoint (optional, defaults to OpenAI official)
+- `OPENAI_MODEL` - Model identifier (default: gpt-4)
 
 ### Step 2: Install Dependencies
 

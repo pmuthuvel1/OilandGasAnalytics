@@ -121,7 +121,7 @@ OilandGasAnalytics/
 ## 🔧 Technology Stack
 
 **Backend**
-- Python 3.11+ with async support
+- Python 3.12+ with async support
 - FastAPI for REST API framework
 - LangGraph for multi-agent orchestration
 - LangChain for agent creation

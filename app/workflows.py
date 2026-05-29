@@ -5,7 +5,6 @@ import json
 from typing import Any, Dict, List, Optional, TypedDict
 from datetime import datetime
 from langgraph.graph import StateGraph, END
-from langgraph.graph.graph import CompiledGraph
 
 from .config import get_config
 from .agents import AgentExecutorManager
@@ -185,7 +184,7 @@ def create_report_generation_node(manager: AgentExecutorManager):
     return report_generation
 
 
-def create_analysis_workflow() -> CompiledGraph:
+def create_analysis_workflow() -> Any:
     """Create the complete multi-agent analysis workflow using LangGraph"""
 
     config = get_config()
@@ -215,7 +214,7 @@ def create_analysis_workflow() -> CompiledGraph:
     return workflow.compile()
 
 
-def create_quick_analysis_workflow() -> CompiledGraph:
+def create_quick_analysis_workflow() -> Any:
     """Create a faster workflow that only runs critical agents"""
 
     config = get_config()

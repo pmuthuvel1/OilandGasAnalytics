@@ -28,8 +28,8 @@ This is a **real, deployable multi-agent AI system** that solves genuine busines
 
 ## 📋 Prerequisites
 
-- **Python 3.11+**
-- **OpenAI API Key** (GPT-4 or compatible)
+- **Python 3.12+**
+- **OpenAI API Key** (GPT-5.5 or compatible)
 - **Docker** (optional, for containerized deployment)
 - **8GB RAM minimum** for concurrent agent execution
 
@@ -413,7 +413,7 @@ docker logs oil-analytics -f
 ```
 # OpenAI Configuration
 OPENAI_API_KEY=sk-... (required)
-OPENAI_MODEL=gpt-4
+OPENAI_MODEL=gpt-5.5
 
 # Server Configuration
 API_PORT=8000
@@ -584,7 +584,7 @@ Error: Invalid API key or API key not found
 ```
 **Solution**: 
 1. Verify `OPENAI_API_KEY` is set in `.env`
-2. Check API key has GPT-4 access
+2. Check API key has access to the configured model
 3. Verify API key hasn't expired
 
 ### Issue: Agent Timeout
