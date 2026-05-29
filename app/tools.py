@@ -37,6 +37,12 @@ class AnalysisResult(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
+def _source_metadata(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Carry source evidence through tool outputs when available."""
+
+    return payload.get("source_metadata", {}) if isinstance(payload, dict) else {}
+
+
 # SEISMIC ANALYSIS TOOLS
 def analyze_seismic_amplitude(seismic_data: Dict[str, Any]) -> Dict[str, Any]:
     """Analyze seismic amplitude for anomalies and bright spots"""
@@ -59,6 +65,7 @@ def analyze_seismic_amplitude(seismic_data: Dict[str, Any]) -> Dict[str, Any]:
             "interpretation": "Potential hydrocarbon indicators detected"
             if bright_spots > 0
             else "No significant anomalies",
+            "source_metadata": _source_metadata(seismic_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -75,16 +82,18 @@ def detect_faults(seismic_data: Dict[str, Any]) -> Dict[str, Any]:
         differences = np.abs(np.diff(amplitudes))
         threshold = np.mean(differences) + 2 * np.std(differences)
         fault_indices = np.where(differences > threshold)[0]
+        depths = np.array(seismic_data.get("depth_values", list(range(len(amplitudes)))))
 
         return {
             "fault_count": int(len(fault_indices)),
-            "fault_depths": [float(amplitudes[i]) for i in fault_indices[:5]],  # Top 5
+            "fault_depths": [float(depths[i]) for i in fault_indices[:5]],
             "fault_severity": float(np.max(differences) / np.mean(amplitudes)) if np.mean(amplitudes) > 0 else 0,
             "risk_level": "HIGH"
             if len(fault_indices) > 3
             else "MEDIUM"
             if len(fault_indices) > 1
             else "LOW",
+            "source_metadata": _source_metadata(seismic_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -109,6 +118,7 @@ def pick_horizons(seismic_data: Dict[str, Any]) -> Dict[str, Any]:
             "horizons_picked": len(peaks),
             "top_horizons": sorted(peaks, key=lambda x: x["amplitude"], reverse=True)[:3],
             "coverage": float(len(peaks) / len(amplitudes) * 100) if len(amplitudes) > 0 else 0,
+            "source_metadata": _source_metadata(seismic_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -140,6 +150,7 @@ def classify_lithology(well_data: Dict[str, Any]) -> Dict[str, Any]:
             "gamma_ray_avg": gr_mean,
             "resistivity_avg": res_mean,
             "quality_score": min(1.0, max(0, (150 - abs(gr_mean - 75)) / 150)),
+            "source_metadata": _source_metadata(well_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -172,6 +183,7 @@ def identify_fluids(well_data: Dict[str, Any]) -> Dict[str, Any]:
             "confidence": confidence,
             "resistivity_avg": res_mean,
             "porosity_avg": por_mean,
+            "source_metadata": _source_metadata(well_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -194,6 +206,7 @@ def estimate_porosity(well_data: Dict[str, Any]) -> Dict[str, Any]:
             "max_porosity": por_max,
             "min_porosity": por_min,
             "porosity_quality": "Good" if por_mean > 15 else "Fair" if por_mean > 10 else "Poor",
+            "source_metadata": _source_metadata(well_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -215,6 +228,7 @@ def estimate_permeability(well_data: Dict[str, Any]) -> Dict[str, Any]:
             "estimated_permeability_md": permeability,
             "permeability_class": "High" if permeability > 100 else "Moderate" if permeability > 10 else "Low",
             "basis": "Porosity-based estimation",
+            "source_metadata": _source_metadata(well_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -236,6 +250,7 @@ def analyze_saturation(well_data: Dict[str, Any]) -> Dict[str, Any]:
             "water_saturation": water_sat,
             "hydrocarbon_saturation": 1.0 - water_sat,
             "saturation_confidence": 0.75,
+            "source_metadata": _source_metadata(well_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -262,6 +277,7 @@ def predict_pressure(well_data: Dict[str, Any]) -> Dict[str, Any]:
             "predicted_pressure_psi": predicted_pressure,
             "normal_pressure_gradient": 0.465,
             "abnormal_pressure": gr_mean > 100,
+            "source_metadata": _source_metadata(well_data),
         }
     except Exception as e:
         return {"error": str(e)}
@@ -283,8 +299,17 @@ def calculate_volumes(analysis_data: Dict[str, Any]) -> Dict[str, Any]:
     """Calculate volumetric estimates"""
     gross_rock_volume = analysis_data.get("grv", 50.0)  # Millions of barrels
     net_to_gross = 0.7
-    porosity = 0.18
-    saturation = 0.6
+    porosity = analysis_data.get("porosity_fraction", 0.18)
+    saturation = analysis_data.get("hydrocarbon_saturation", 0.6)
+
+    reservoir = analysis_data.get("reservoir_properties", {})
+    saturation_result = (
+        reservoir.get("tool_results", {}).get("analyze_saturation", {})
+        if isinstance(reservoir, dict)
+        else {}
+    )
+    if saturation_result.get("hydrocarbon_saturation") is not None:
+        saturation = float(saturation_result["hydrocarbon_saturation"])
 
     stock_tank_volume = gross_rock_volume * net_to_gross * porosity * saturation * 7.758
 
@@ -293,6 +318,11 @@ def calculate_volumes(analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         "stock_tank_volume_mmbbl": float(stock_tank_volume),
         "recovery_factor": 0.1,
         "recoverable_reserves_mmbbl": float(stock_tank_volume * 0.1),
+        "input_assumptions": {
+            "net_to_gross": net_to_gross,
+            "porosity_fraction": porosity,
+            "hydrocarbon_saturation": saturation,
+        },
     }
 
 

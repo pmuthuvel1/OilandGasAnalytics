@@ -240,8 +240,9 @@ class WorkflowOrchestrator:
 
     def __init__(self):
         self.config = get_config()
-        self.full_workflow = create_analysis_workflow()
-        self.quick_workflow = create_quick_analysis_workflow()
+        self.manager = AgentExecutorManager()
+        self.full_workflow = None
+        self.quick_workflow = None
         self.execution_history = []
 
     def execute_full_analysis(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
@@ -250,16 +251,12 @@ class WorkflowOrchestrator:
         logger.info(f"Starting full analysis workflow")
 
         workflow_id = datetime.now().isoformat()
-        initial_state: AnalysisState = {
-            "workflow_id": workflow_id,
-            "user_input": user_input,
-            "messages": [],
-            "errors": [],
-        }
 
         try:
-            result = self.full_workflow.invoke(initial_state)
-            result["status"] = "success"
+            result = self.manager.execute_collaborative_workflow(
+                user_input=user_input,
+                quick=False,
+            )
             self.execution_history.append(result)
             return result
         except Exception as e:
@@ -268,7 +265,7 @@ class WorkflowOrchestrator:
                 "status": "error",
                 "workflow_id": workflow_id,
                 "error": str(e),
-                "messages": initial_state["messages"],
+                "messages": [],
             }
 
     def execute_quick_analysis(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
@@ -277,16 +274,12 @@ class WorkflowOrchestrator:
         logger.info(f"Starting quick analysis workflow")
 
         workflow_id = datetime.now().isoformat()
-        initial_state: AnalysisState = {
-            "workflow_id": workflow_id,
-            "user_input": user_input,
-            "messages": [],
-            "errors": [],
-        }
 
         try:
-            result = self.quick_workflow.invoke(initial_state)
-            result["status"] = "success"
+            result = self.manager.execute_collaborative_workflow(
+                user_input=user_input,
+                quick=True,
+            )
             self.execution_history.append(result)
             return result
         except Exception as e:
@@ -295,7 +288,7 @@ class WorkflowOrchestrator:
                 "status": "error",
                 "workflow_id": workflow_id,
                 "error": str(e),
-                "messages": initial_state["messages"],
+                "messages": [],
             }
 
     def get_execution_history(self) -> List[Dict[str, Any]]:

@@ -10,6 +10,7 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from .config import AGENT_CONFIGS, get_config
+from .data_sources import SEG_OPEN_DATA_SOURCES, enrich_with_reference_data
 from .tools import TOOLS
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,10 @@ class AgentState(BaseModel):
     """State for multi-agent workflow."""
 
     messages: List[Dict[str, Any]] = Field(default_factory=list)
+    shared_memory: Dict[str, Any] = Field(default_factory=dict)
+    evidence_register: List[Dict[str, Any]] = Field(default_factory=list)
+    collaboration_log: List[Dict[str, Any]] = Field(default_factory=list)
+    iteration: int = 0
     analysis_results: Dict[str, Any] = Field(default_factory=dict)
     current_agent: str = ""
     completed_agents: List[str] = Field(default_factory=list)
@@ -36,6 +41,16 @@ class ToolInput(BaseModel):
 
 
 AGENT_INSTRUCTIONS = {
+    "planner": """You are the workflow planner. Choose the next specialist agents
+based on available seismic, well-log, reservoir, and risk evidence. Delegate only
+work that can be grounded in data, and request research/data loading when evidence
+is missing.""",
+    "evaluator": """You are the independent evaluator. Critique the previous agent
+outputs for missing data, weak evidence, tool failures, unsupported claims, and
+cross-agent contradictions. Approve only when findings cite usable evidence.""",
+    "research_agent": """You are the data research agent. Retrieve and normalize
+local uploaded data first, then recommend suitable SEG/SEAM open data sources for
+larger validation datasets. Never pretend that a remote dataset was downloaded.""",
     "seismic_analyzer": """You are an expert seismic interpreter for oil and gas exploration.
 Use the seismic tools to identify amplitude anomalies, likely discontinuities, and
 horizon candidates. Tie every interpretation to numeric tool outputs, call out data
@@ -138,6 +153,18 @@ def _create_llm(temperature: float = 0.2) -> Optional[Any]:
     return ChatOpenAI(**llm_params)
 
 
+def _extract_llm_text(result: Any) -> str:
+    """Extract display text from LangChain messages and executor outputs."""
+
+    if isinstance(result, dict):
+        if "output" in result:
+            return str(result["output"])
+        if "content" in result:
+            return str(result["content"])
+        return json.dumps(result, default=_json_default)
+    return str(getattr(result, "content", result))
+
+
 def _create_agent_executor(agent_name: str, temperature: float = 0.2) -> Optional[Any]:
     """Create one configured LangChain function-calling agent."""
 
@@ -220,7 +247,7 @@ def _analysis_payload_for_tool(tool_name: str, context: Dict[str, Any]) -> Any:
 
 
 class AgentExecutorManager:
-    """Manages deterministic tool execution plus optional LLM interpretation."""
+    """Manages dynamic agent collaboration plus optional LLM interpretation."""
 
     def __init__(self):
         self.config = get_config()
@@ -231,6 +258,104 @@ class AgentExecutorManager:
             "exploration_risk_assessor": create_exploration_risk_agent(),
             "report_generator": create_report_generator_agent(),
         }
+        self.reasoning_llm = _create_llm(temperature=0.15)
+
+    def _log(
+        self,
+        state: AgentState,
+        agent: str,
+        action: str,
+        details: Dict[str, Any],
+    ) -> None:
+        """Append a compact collaboration event to shared memory."""
+
+        state.collaboration_log.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "iteration": state.iteration,
+                "agent": agent,
+                "action": action,
+                "details": details,
+            }
+        )
+
+    def _invoke_reasoning_llm(
+        self, role: str, prompt: str, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Make a direct LLM call when configured and report when skipped."""
+
+        if self.reasoning_llm is None:
+            return {
+                "mode": "llm_skipped",
+                "reason": "OPENAI_API_KEY is not configured or langchain-openai is unavailable.",
+            }
+        try:
+            messages = [
+                ("system", AGENT_INSTRUCTIONS.get(role, AGENT_INSTRUCTIONS["report_generator"])),
+                (
+                    "human",
+                    f"{prompt}\n\nShared context JSON:\n{json.dumps(payload, default=_json_default)}",
+                ),
+            ]
+            result = self.reasoning_llm.invoke(messages)
+            return {"mode": "llm", "content": _extract_llm_text(result)}
+        except Exception as exc:
+            logger.exception("LLM call failed for %s", role)
+            return {"mode": "llm_error", "error": str(exc)}
+
+    def _planner_delegate(self, state: AgentState, quick: bool = False) -> List[str]:
+        """Select agents dynamically from available data and current evidence gaps."""
+
+        user_input = state.user_input
+        selected: List[str] = []
+        if user_input.get("seismic_data"):
+            selected.append("seismic_analyzer")
+        if user_input.get("well_log_data"):
+            selected.append("well_log_interpreter")
+        if user_input.get("well_log_data") or state.analysis_results.get("well_log_interpreter"):
+            selected.append("reservoir_characterizer")
+        selected.append("exploration_risk_assessor")
+        if quick:
+            selected = [agent for agent in selected if agent != "seismic_analyzer"]
+
+        # Keep order stable while avoiding duplicates.
+        delegated = list(dict.fromkeys(selected))
+        llm_plan = self._invoke_reasoning_llm(
+            "planner",
+            "Create a concise execution plan. Return useful critique, not hidden reasoning.",
+            {
+                "quick": quick,
+                "available_keys": sorted(user_input.keys()),
+                "delegated_agents": delegated,
+                "data_sources": user_input.get("data_sources", []),
+            },
+        )
+        self._log(
+            state,
+            "planner",
+            "delegated",
+            {"agents": delegated, "llm_plan": llm_plan},
+        )
+        return delegated
+
+    def _research_missing_context(self, state: AgentState) -> None:
+        """Load local reference data and add open-data recommendations."""
+
+        before = sorted(state.user_input.keys())
+        state.user_input = enrich_with_reference_data(state.user_input)
+        after = sorted(state.user_input.keys())
+        data_sources = state.user_input.get("data_sources", [])
+        state.evidence_register.extend(data_sources)
+        self._log(
+            state,
+            "research_agent",
+            "loaded_context",
+            {
+                "keys_added": [key for key in after if key not in before],
+                "local_sources": data_sources,
+                "open_data_recommendations": SEG_OPEN_DATA_SOURCES,
+            },
+        )
 
     def _run_configured_tools(self, agent_name: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Run an agent's required tools before LLM synthesis."""
@@ -299,6 +424,166 @@ class AgentExecutorManager:
                     "tool_results": tool_results,
                 },
             }
+
+    def _evaluate_iteration(self, state: AgentState, delegated_agents: List[str]) -> Dict[str, Any]:
+        """Critique outputs and request retries when evidence is missing."""
+
+        findings = state.analysis_results
+        missing: List[str] = []
+        weak: List[str] = []
+        if "seismic_analyzer" in delegated_agents and not state.user_input.get("seismic_data"):
+            missing.append("seismic_data")
+        if "well_log_interpreter" in delegated_agents and not state.user_input.get("well_log_data"):
+            missing.append("well_log_data")
+
+        for agent_name in delegated_agents:
+            result = findings.get(agent_name, {})
+            tool_results = result.get("tool_results", {})
+            errors = [
+                tool_name
+                for tool_name, tool_result in tool_results.items()
+                if isinstance(tool_result, dict) and tool_result.get("error")
+            ]
+            if errors:
+                weak.append(f"{agent_name}: tool errors in {', '.join(errors)}")
+
+        approved = not missing and not weak
+        llm_critique = self._invoke_reasoning_llm(
+            "evaluator",
+            "Critique the iteration. State approve/request_revision and evidence gaps.",
+            {
+                "delegated_agents": delegated_agents,
+                "missing": missing,
+                "weak": weak,
+                "findings": findings,
+            },
+        )
+        evaluation = {
+            "approved": approved,
+            "missing_evidence": missing,
+            "weak_outputs": weak,
+            "llm_critique": llm_critique,
+        }
+        self._log(state, "evaluator", "evaluated", evaluation)
+        return evaluation
+
+    def _finalize_report(self, state: AgentState, evaluation: Dict[str, Any]) -> Dict[str, Any]:
+        """Run report agent after approval or final retry."""
+
+        all_analyses = list(state.analysis_results.values())
+        context = {
+            "all_analyses": all_analyses,
+            "evaluation": evaluation,
+            "shared_memory": state.shared_memory,
+            "evidence_register": state.evidence_register,
+            "collaboration_log": state.collaboration_log,
+        }
+        report = self.execute_agent(
+            "report_generator",
+            "Produce a final answer grounded in the approved agent outputs and evaluator critique.",
+            context,
+        )
+        final_llm = self._invoke_reasoning_llm(
+            "report_generator",
+            "Write the final executive and technical synthesis using only cited tool outputs and evidence.",
+            context,
+        )
+        report["final_synthesis"] = final_llm
+        self._log(
+            state,
+            "final_agent",
+            "produced_answer",
+            {"status": report.get("status"), "llm_mode": final_llm.get("mode")},
+        )
+        return report
+
+    def execute_collaborative_workflow(
+        self, user_input: Dict[str, Any], quick: bool = False, max_review_cycles: int = 2
+    ) -> Dict[str, Any]:
+        """Run Planner -> Research -> Executor -> Evaluator retry loop -> Final."""
+
+        state = AgentState(
+            user_input=dict(user_input),
+            shared_memory={
+                "workflow_goal": "Evidence-grounded oil and gas prospect analysis",
+                "llm_configured": self.reasoning_llm is not None,
+            },
+        )
+        workflow_id = datetime.now().isoformat()
+        self._log(state, "planner", "started", {"workflow_id": workflow_id, "quick": quick})
+        self._research_missing_context(state)
+
+        evaluation: Dict[str, Any] = {"approved": False}
+        delegated_agents: List[str] = []
+        for iteration in range(1, max_review_cycles + 1):
+            state.iteration = iteration
+            delegated_agents = self._planner_delegate(state, quick=quick)
+            for agent_name in delegated_agents:
+                task = AGENT_CONFIGS[agent_name]["description"]
+                context = {
+                    **state.user_input,
+                    "shared_memory": state.shared_memory,
+                    "prior_findings": state.analysis_results,
+                    "seismic_interpretation": state.analysis_results.get("seismic_analyzer", {}),
+                    "petrophysics": state.analysis_results.get("well_log_interpreter", {}),
+                    "reservoir_properties": state.analysis_results.get("reservoir_characterizer", {}),
+                    "evidence_register": state.evidence_register,
+                }
+                result = self.execute_agent(agent_name, task, context)
+                state.analysis_results[agent_name] = result
+                state.completed_agents.append(agent_name)
+                self._log(
+                    state,
+                    agent_name,
+                    "executed",
+                    {
+                        "status": result.get("status"),
+                        "tools": list(result.get("tool_results", {}).keys()),
+                        "llm_mode": result.get("result", {}).get("mode")
+                        if isinstance(result.get("result"), dict)
+                        else "llm",
+                    },
+                )
+
+            evaluation = self._evaluate_iteration(state, delegated_agents)
+            if evaluation["approved"]:
+                break
+            self._log(
+                state,
+                "planner",
+                "revision_requested",
+                {
+                    "next_action": "research_agent_reload_then_retry",
+                    "missing_evidence": evaluation["missing_evidence"],
+                    "weak_outputs": evaluation["weak_outputs"],
+                },
+            )
+            self._research_missing_context(state)
+
+        final_report = self._finalize_report(state, evaluation)
+        state.final_report = final_report
+
+        return {
+            "workflow_id": workflow_id,
+            "status": "success" if evaluation.get("approved") else "partial",
+            "planner_delegation": delegated_agents,
+            "shared_memory": state.shared_memory,
+            "evidence_register": state.evidence_register,
+            "collaboration_log": state.collaboration_log,
+            "evaluation": evaluation,
+            "agents_executed": state.completed_agents,
+            "findings": state.analysis_results,
+            "seismic_analysis": state.analysis_results.get("seismic_analyzer", {}),
+            "well_log_analysis": state.analysis_results.get("well_log_interpreter", {}),
+            "reservoir_analysis": state.analysis_results.get("reservoir_characterizer", {}),
+            "risk_assessment": state.analysis_results.get("exploration_risk_assessor", {}),
+            "final_report": final_report,
+            "messages": [
+                f"{event['agent']} {event['action']} at {event['timestamp']}"
+                for event in state.collaboration_log
+            ],
+            "open_data_recommendations": SEG_OPEN_DATA_SOURCES,
+        }
 
     def execute_workflow(
         self, workflow_config: Dict[str, Any], data: Dict[str, Any]

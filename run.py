@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Import application components
 from app.config import get_config
+from app.data_sources import SEG_OPEN_DATA_SOURCES
 from app.workflows import WorkflowOrchestrator
 from app.tools import TOOLS
 
@@ -43,6 +44,9 @@ class AnalysisRequest(BaseModel):
     analysis_type: str = "full"  # 'full' or 'quick'
     seismic_data: Optional[Dict[str, Any]] = None
     well_log_data: Optional[Dict[str, Any]] = None
+    seismic_csv_path: Optional[str] = None
+    well_log_csv_path: Optional[str] = None
+    seam_well_number: Optional[int] = 1
     user_notes: Optional[str] = None
 
 
@@ -118,10 +122,13 @@ async def get_info():
         "system_name": "Oil & Gas Analytics Multi-Agent System",
         "version": "1.0.0",
         "agents": {
+            "planner": "Dynamically delegates specialists and revision cycles",
+            "research_agent": "Loads local evidence and recommends SEG/SEAM open data",
             "seismic_analyzer": "Analyzes seismic data for structures",
             "well_log_interpreter": "Interprets well logs",
             "reservoir_characterizer": "Characterizes reservoir properties",
             "exploration_risk_assessor": "Assesses exploration risks",
+            "evaluator": "Critiques outputs and requests retries when evidence is weak",
             "report_generator": "Generates comprehensive reports",
         },
         "api_port": config.API_PORT,
@@ -133,6 +140,9 @@ async def get_info():
             "Risk assessment",
             "Volumetric calculation",
             "Report generation",
+            "Planner-executor-evaluator retry loops",
+            "Shared memory and collaboration logs",
+            "Local CSV evidence loading and SEG open-data guidance",
         ],
     }
 
@@ -158,6 +168,9 @@ async def analyze(request: AnalysisRequest, background_tasks: BackgroundTasks):
             "well_name": request.well_name,
             "seismic_data": request.seismic_data or {},
             "well_log_data": request.well_log_data or {},
+            "seismic_csv_path": request.seismic_csv_path,
+            "well_log_csv_path": request.well_log_csv_path,
+            "seam_well_number": request.seam_well_number,
             "user_notes": request.user_notes or "",
         }
 
@@ -273,6 +286,20 @@ async def list_tools():
     }
 
 
+@app.get("/data/open-sources")
+async def list_open_data_sources():
+    """List public data sources suitable for larger seismic validation."""
+    return {
+        "status": "success",
+        "sources": SEG_OPEN_DATA_SOURCES,
+        "note": (
+            "Large SEG/SEAM files are not auto-downloaded by the API. Download them "
+            "into the data directory, then pass seismic_csv_path/well_log_csv_path "
+            "for normalized CSV extracts or uploaded local files."
+        ),
+    }
+
+
 @app.post("/tools/{tool_name}")
 async def execute_tool(tool_name: str, data: Dict[str, Any]):
     """
@@ -362,6 +389,11 @@ def log_analysis_result(result: Dict[str, Any], well_name: str):
                 "well_logs": result.get("well_log_analysis", {}).get("status"),
                 "reservoir": result.get("reservoir_analysis", {}).get("status"),
                 "risk": result.get("risk_assessment", {}).get("status"),
+            },
+            "collaboration": {
+                "agents_executed": result.get("agents_executed", []),
+                "planner_delegation": result.get("planner_delegation", []),
+                "evaluation": result.get("evaluation", {}),
             },
         }
 
