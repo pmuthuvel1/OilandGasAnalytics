@@ -18,15 +18,55 @@ class Config:
     # LLM Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "")
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5.5")
+    COMPASS_CHAT_MODEL: str = os.getenv("COMPASS_CHAT_MODEL", "gpt-4.1")
+    COMPASS_REASONING_MODEL: str = os.getenv("COMPASS_REASONING_MODEL", "gpt-5.1")
+    COMPASS_EMBEDDING_MODEL: str = os.getenv(
+        "COMPASS_EMBEDDING_MODEL",
+        "text-embedding-3-large",
+    )
+    COMPASS_WHISPER_MODEL: str = os.getenv("COMPASS_WHISPER_MODEL", "whisper-1")
+    SAMPLE_MODE: bool = os.getenv("SAMPLE_MODE", "false").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    OPENAI_PRIMARY_MODEL: str = os.getenv(
+        "OPENAI_PRIMARY_MODEL",
+        os.getenv("OPENAI_MODEL", COMPASS_CHAT_MODEL),
+    )
+    OPENAI_REASONING_MODEL: str = os.getenv(
+        "OPENAI_REASONING_MODEL",
+        COMPASS_REASONING_MODEL,
+    )
+    OPENAI_EMBEDDING_MODEL: str = os.getenv(
+        "OPENAI_EMBEDDING_MODEL",
+        COMPASS_EMBEDDING_MODEL,
+    )
+    OPENAI_TRANSCRIPTION_MODEL: str = os.getenv(
+        "OPENAI_TRANSCRIPTION_MODEL",
+        COMPASS_WHISPER_MODEL,
+    )
+    OPENAI_MODEL: str = OPENAI_PRIMARY_MODEL
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FILE: str = os.getenv("LOG_FILE", "logs/agent_logs.json")
+    USER_INTERACTION_LOG_FILE: str = os.getenv(
+        "USER_INTERACTION_LOG_FILE",
+        "logs/user_interactions.jsonl",
+    )
 
     # Agent Configuration
     MAX_ITERATIONS: int = int(os.getenv("MAX_ITERATIONS", 10))
     AGENT_TIMEOUT: int = int(os.getenv("AGENT_TIMEOUT", 300))
+    ENABLE_PARALLEL_AGENTS: bool = os.getenv("ENABLE_PARALLEL_AGENTS", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    PARALLEL_AGENT_WORKERS: int = int(os.getenv("PARALLEL_AGENT_WORKERS", 2))
 
     # Data Configuration
     DATA_PATH: str = os.getenv("DATA_PATH", "data/")

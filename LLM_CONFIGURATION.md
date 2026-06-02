@@ -23,11 +23,12 @@ The Oil & Gas Analytics system now supports flexible LLM configuration via envir
   - Format: Complete URL without trailing slash (e.g., `https://api.openai.com/v1`)
   - Required: No
 
-### Optional
-- **`OPENAI_MODEL`** - Model identifier to use
-  - Default: `gpt-5.5`
-  - Examples: `gpt-5.5`, `gpt-5-mini`, provider deployment names, local model names, etc.
-  - Required: No
+### Optional Model Roles
+- **`OPENAI_PRIMARY_MODEL`** - Primary text generation and most agent tasks. Default: `gpt-4.1`
+- **`OPENAI_REASONING_MODEL`** - Planning, evaluation, final synthesis, and complex multi-step logic. Default: `gpt-5.1`
+- **`OPENAI_EMBEDDING_MODEL`** - Embeddings, RAG, document retrieval, and semantic search. Default: `text-embedding-3-large`
+- **`OPENAI_TRANSCRIPTION_MODEL`** - Speech-to-text for audio and voice use cases. Default: `whisper-1`
+- **`OPENAI_MODEL`** - Backward-compatible alias for older deployments. Prefer `OPENAI_PRIMARY_MODEL`.
 
 ---
 
@@ -37,7 +38,10 @@ The Oil & Gas Analytics system now supports flexible LLM configuration via envir
 
 ```env
 OPENAI_API_KEY=sk-proj-xxx-your-key-here
-OPENAI_MODEL=gpt-5.5
+OPENAI_PRIMARY_MODEL=gpt-4.1
+OPENAI_REASONING_MODEL=gpt-5.1
+OPENAI_EMBEDDING_MODEL=text-embedding-3-large
+OPENAI_TRANSCRIPTION_MODEL=whisper-1
 OPENAI_BASE_URL=
 ```
 
@@ -54,7 +58,8 @@ python run.py
 
 ```env
 OPENAI_API_KEY=your-core42-api-key
-OPENAI_MODEL=your-core42-model-name
+OPENAI_PRIMARY_MODEL=your-core42-primary-model-name
+OPENAI_REASONING_MODEL=your-core42-reasoning-model-name
 OPENAI_BASE_URL=https://api.core42.ai/v1
 ```
 
@@ -75,7 +80,8 @@ python run.py
 
 ```env
 OPENAI_API_KEY=ollama  # Dummy key, not used by Ollama
-OPENAI_MODEL=mistral    # Your pulled model name
+OPENAI_PRIMARY_MODEL=mistral    # Your pulled model name
+OPENAI_REASONING_MODEL=mistral
 OPENAI_BASE_URL=http://localhost:11434/v1
 ```
 
@@ -103,7 +109,8 @@ python run.py
 
 ```env
 OPENAI_API_KEY=local-key  # Dummy key
-OPENAI_MODEL=your-model    # Model name in LM Studio
+OPENAI_PRIMARY_MODEL=your-model    # Model name in LM Studio
+OPENAI_REASONING_MODEL=your-model
 OPENAI_BASE_URL=http://localhost:1234/v1
 ```
 
@@ -113,7 +120,8 @@ OPENAI_BASE_URL=http://localhost:1234/v1
 
 ```env
 OPENAI_API_KEY=your-azure-api-key
-OPENAI_MODEL=your-azure-deployment-name
+OPENAI_PRIMARY_MODEL=your-azure-primary-deployment-name
+OPENAI_REASONING_MODEL=your-azure-reasoning-deployment-name
 OPENAI_BASE_URL=https://your-resource.openai.azure.com/v1
 ```
 
@@ -125,7 +133,8 @@ For any server running OpenAI-compatible API (vLLM, text-generation-webui, etc.)
 
 ```env
 OPENAI_API_KEY=your-api-key
-OPENAI_MODEL=model-name
+OPENAI_PRIMARY_MODEL=model-name
+OPENAI_REASONING_MODEL=reasoning-model-name
 OPENAI_BASE_URL=https://your-server.com:8000/v1
 ```
 
@@ -135,20 +144,24 @@ OPENAI_BASE_URL=https://your-server.com:8000/v1
 
 ### Code Implementation
 
-All agents automatically use the configured LLM:
+The system routes model usage by task:
 
 ```python
 # From app/agents.py
 config = get_config()
 llm_params = {
     "api_key": config.OPENAI_API_KEY,
-    "model": config.OPENAI_MODEL,
+    "model": config.OPENAI_PRIMARY_MODEL,
     "temperature": 0.2,
 }
 if config.OPENAI_BASE_URL:
     llm_params["base_url"] = config.OPENAI_BASE_URL
 
-llm = ChatOpenAI(**llm_params)
+agent_llm = ChatOpenAI(**llm_params)
+reasoning_llm = ChatOpenAI(
+    api_key=config.OPENAI_API_KEY,
+    model=config.OPENAI_REASONING_MODEL,
+)
 ```
 
 **Key Features:**

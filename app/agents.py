@@ -2,6 +2,7 @@
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -23,6 +24,7 @@ class AgentState(BaseModel):
     shared_memory: Dict[str, Any] = Field(default_factory=dict)
     evidence_register: List[Dict[str, Any]] = Field(default_factory=list)
     collaboration_log: List[Dict[str, Any]] = Field(default_factory=list)
+    agent_logs: List[Dict[str, Any]] = Field(default_factory=list)
     iteration: int = 0
     analysis_results: Dict[str, Any] = Field(default_factory=dict)
     current_agent: str = ""
@@ -101,6 +103,12 @@ def _json_default(value: Any) -> str:
     return str(value)
 
 
+def _utc_timestamp_z() -> str:
+    """Return an ISO-8601 UTC timestamp with Z suffix."""
+
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+
 def _create_structured_tool(tool_name: str) -> StructuredTool:
     """Create a LangChain structured tool from the local tool registry."""
 
@@ -126,7 +134,7 @@ def create_tool_functions(tool_names: Optional[List[str]] = None) -> List[Struct
     return [_create_structured_tool(name) for name in selected_tools]
 
 
-def _create_llm(temperature: float = 0.2) -> Optional[Any]:
+def _create_llm(temperature: float = 0.2, model: Optional[str] = None) -> Optional[Any]:
     """Create the configured chat model when an API key is available."""
 
     config = get_config()
@@ -144,7 +152,7 @@ def _create_llm(temperature: float = 0.2) -> Optional[Any]:
 
     llm_params: Dict[str, Any] = {
         "api_key": config.OPENAI_API_KEY,
-        "model": config.OPENAI_MODEL,
+        "model": model or config.OPENAI_PRIMARY_MODEL,
         "temperature": temperature,
     }
     if config.OPENAI_BASE_URL:
@@ -168,7 +176,7 @@ def _extract_llm_text(result: Any) -> str:
 def _create_agent_executor(agent_name: str, temperature: float = 0.2) -> Optional[Any]:
     """Create one configured LangChain function-calling agent."""
 
-    llm = _create_llm(temperature=temperature)
+    llm = _create_llm(temperature=temperature, model=get_config().OPENAI_PRIMARY_MODEL)
     if llm is None:
         return None
 
@@ -258,7 +266,10 @@ class AgentExecutorManager:
             "exploration_risk_assessor": create_exploration_risk_agent(),
             "report_generator": create_report_generator_agent(),
         }
-        self.reasoning_llm = _create_llm(temperature=0.15)
+        self.reasoning_llm = _create_llm(
+            temperature=0.15,
+            model=self.config.OPENAI_REASONING_MODEL,
+        )
 
     def _log(
         self,
@@ -267,7 +278,60 @@ class AgentExecutorManager:
         action: str,
         details: Dict[str, Any],
     ) -> None:
-        """Append a compact collaboration event to shared memory."""
+        """Append both legacy and normalized collaboration logs."""
+
+        status = details.get("status", "success")
+        confidence = details.get("confidence")
+        if not isinstance(confidence, (int, float)):
+            confidence = 0.79 if status == "success" else 0.39
+
+        target_agent = details.get("target_agent")
+        if not target_agent:
+            delegated = details.get("agents")
+            if isinstance(delegated, list) and delegated:
+                target_agent = delegated[0]
+            elif agent == "planner":
+                target_agent = "research_agent"
+            elif agent == "evaluator":
+                retry_agents = details.get("retry_agents", [])
+                target_agent = retry_agents[0] if retry_agents else "planner"
+            elif agent in {"seismic_analyzer", "well_log_interpreter"}:
+                target_agent = "reservoir_characterizer"
+            elif agent == "reservoir_characterizer":
+                target_agent = "exploration_risk_assessor"
+            elif agent == "exploration_risk_assessor":
+                target_agent = "report_generator"
+            else:
+                target_agent = ""
+
+        input_summary = details.get("input_summary")
+        if not input_summary:
+            input_keys = details.get("input_keys", [])
+            if input_keys:
+                input_summary = f"Input keys: {', '.join(input_keys[:6])}"
+            else:
+                input_summary = f"Executed {action} in collaboration workflow"
+
+        output_summary = details.get("output_summary")
+        if not output_summary:
+            tools = details.get("tools", [])
+            if tools:
+                output_summary = f"Executed tools: {', '.join(tools)}"
+            else:
+                output_summary = f"Completed action: {action}"
+
+        normalized_entry = {
+            "timestamp": _utc_timestamp_z(),
+            "agent_name": AGENT_CONFIGS.get(agent, {}).get("name", agent),
+            "action": action,
+            "input_summary": str(input_summary),
+            "output_summary": str(output_summary),
+            "target_agent": str(target_agent),
+            "confidence": round(float(confidence), 2),
+            "retry_count": max(0, state.iteration - 1),
+            "status": str(status),
+        }
+        state.agent_logs.append(normalized_entry)
 
         state.collaboration_log.append(
             {
@@ -318,6 +382,12 @@ class AgentExecutorManager:
         if quick:
             selected = [agent for agent in selected if agent != "seismic_analyzer"]
 
+        latest_evaluation = state.shared_memory.get("latest_evaluation", {})
+        retry_agents = latest_evaluation.get("retry_agents", [])
+        if retry_agents:
+            # Put weak agents first on retry cycles so evaluator feedback has teeth.
+            selected = retry_agents + selected
+
         # Keep order stable while avoiding duplicates.
         delegated = list(dict.fromkeys(selected))
         llm_plan = self._invoke_reasoning_llm(
@@ -334,9 +404,81 @@ class AgentExecutorManager:
             state,
             "planner",
             "delegated",
-            {"agents": delegated, "llm_plan": llm_plan},
+            {
+                "agents": delegated,
+                "llm_plan": llm_plan,
+                "input_summary": f"Planner reviewed keys: {', '.join(sorted(user_input.keys())[:8])}",
+                "output_summary": f"Delegated agents: {', '.join(delegated)}",
+                "target_agent": delegated[0] if delegated else "",
+                "status": "success",
+            },
         )
         return delegated
+
+    def _summarize_tool_health(self, tool_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Build compact tool-health summary for collaboration handoffs."""
+
+        failed_tools = []
+        for tool_name, output in tool_results.items():
+            if isinstance(output, dict) and output.get("error"):
+                failed_tools.append(tool_name)
+        return {
+            "tools_run": list(tool_results.keys()),
+            "failed_tools": failed_tools,
+            "healthy": not failed_tools and bool(tool_results),
+        }
+
+    def _build_collaboration_packet(self, state: AgentState, agent_name: str) -> Dict[str, Any]:
+        """Create focused cross-agent context instead of passing raw state only."""
+
+        upstream_map = {
+            "seismic_analyzer": [],
+            "well_log_interpreter": [],
+            "reservoir_characterizer": ["seismic_analyzer", "well_log_interpreter"],
+            "exploration_risk_assessor": [
+                "seismic_analyzer",
+                "well_log_interpreter",
+                "reservoir_characterizer",
+            ],
+            "report_generator": [
+                "seismic_analyzer",
+                "well_log_interpreter",
+                "reservoir_characterizer",
+                "exploration_risk_assessor",
+            ],
+        }
+        upstream_agents = upstream_map.get(agent_name, [])
+        upstream_notes: List[Dict[str, Any]] = []
+        for upstream in upstream_agents:
+            upstream_result = state.analysis_results.get(upstream, {})
+            if not upstream_result:
+                continue
+            tool_results = upstream_result.get("tool_results", {})
+            upstream_notes.append(
+                {
+                    "agent": upstream,
+                    "status": upstream_result.get("status", "unknown"),
+                    "tool_health": self._summarize_tool_health(tool_results),
+                    "llm_mode": upstream_result.get("result", {}).get("mode")
+                    if isinstance(upstream_result.get("result"), dict)
+                    else "llm",
+                }
+            )
+
+        latest_evaluation = state.shared_memory.get("latest_evaluation", {})
+        return {
+            "target_agent": agent_name,
+            "upstream_required": upstream_agents,
+            "upstream_notes": upstream_notes,
+            "latest_critique": {
+                "missing_evidence": latest_evaluation.get("missing_evidence", []),
+                "weak_outputs": latest_evaluation.get("weak_outputs", []),
+                "cross_agent_contradictions": latest_evaluation.get(
+                    "cross_agent_contradictions", []
+                ),
+            },
+            "user_goal": state.shared_memory.get("workflow_goal", ""),
+        }
 
     def _research_missing_context(self, state: AgentState) -> None:
         """Load local reference data and add open-data recommendations."""
@@ -354,6 +496,10 @@ class AgentExecutorManager:
                 "keys_added": [key for key in after if key not in before],
                 "local_sources": data_sources,
                 "open_data_recommendations": SEG_OPEN_DATA_SOURCES,
+                "input_summary": "Enriched user input with local/reference datasets",
+                "output_summary": f"Added keys: {', '.join([key for key in after if key not in before]) or 'none'}",
+                "target_agent": "planner",
+                "status": "success",
             },
         )
 
@@ -369,6 +515,63 @@ class AgentExecutorManager:
                 logger.exception("Tool %s failed for agent %s", tool_name, agent_name)
                 tool_results[tool_name] = {"error": str(exc)}
         return tool_results
+
+    def _build_agent_context(self, state: AgentState) -> Dict[str, Any]:
+        """Build a shared context payload for specialist agents."""
+
+        return {
+            **state.user_input,
+            "shared_memory": state.shared_memory,
+            "prior_findings": state.analysis_results,
+            "seismic_interpretation": state.analysis_results.get("seismic_analyzer", {}),
+            "petrophysics": state.analysis_results.get("well_log_interpreter", {}),
+            "reservoir_properties": state.analysis_results.get("reservoir_characterizer", {}),
+            "evidence_register": state.evidence_register,
+        }
+
+    def _execute_agent_batch(
+        self, state: AgentState, agent_names: List[str]
+    ) -> Dict[str, Dict[str, Any]]:
+        """Execute a batch of agents, with optional parallelism for independent work."""
+
+        if not agent_names:
+            return {}
+
+        max_workers = max(
+            1,
+            min(self.config.PARALLEL_AGENT_WORKERS, len(agent_names)),
+        )
+        should_parallelize = (
+            self.config.ENABLE_PARALLEL_AGENTS
+            and len(agent_names) > 1
+            and self.reasoning_llm is None
+        )
+
+        def _run_single(agent_name: str) -> Dict[str, Any]:
+            task = AGENT_CONFIGS[agent_name]["description"]
+            context = self._build_agent_context(state)
+            context["collaboration_packet"] = self._build_collaboration_packet(
+                state, agent_name
+            )
+            return self.execute_agent(agent_name, task, context)
+
+        ordered_results: Dict[str, Dict[str, Any]] = {}
+        if should_parallelize:
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                future_map = {
+                    pool.submit(_run_single, agent_name): agent_name
+                    for agent_name in agent_names
+                }
+                for future in as_completed(future_map):
+                    agent_name = future_map[future]
+                    ordered_results[agent_name] = future.result()
+            # Restore planner order for deterministic logs/output.
+            ordered_results = {agent_name: ordered_results[agent_name] for agent_name in agent_names}
+        else:
+            for agent_name in agent_names:
+                ordered_results[agent_name] = _run_single(agent_name)
+
+        return ordered_results
 
     def execute_agent(
         self, agent_name: str, task_description: str, context: Dict[str, Any]
@@ -446,6 +649,30 @@ class AgentExecutorManager:
             ]
             if errors:
                 weak.append(f"{agent_name}: tool errors in {', '.join(errors)}")
+            elif not tool_results:
+                weak.append(f"{agent_name}: no tool outputs were produced")
+
+        contradictions: List[str] = []
+        risk_tool_results = (
+            findings.get("exploration_risk_assessor", {})
+            .get("tool_results", {})
+        )
+        trap_score = risk_tool_results.get("evaluate_trap", {}).get("trap_score")
+        permeability = (
+            findings.get("reservoir_characterizer", {})
+            .get("tool_results", {})
+            .get("estimate_permeability", {})
+            .get("estimated_permeability_md")
+        )
+        if (
+            isinstance(trap_score, (int, float))
+            and isinstance(permeability, (int, float))
+            and trap_score < 0.35
+            and permeability > 100
+        ):
+            contradictions.append(
+                "High permeability with poor trap quality: validate seal and trap mapping before recommendation."
+            )
 
         approved = not missing and not weak
         llm_critique = self._invoke_reasoning_llm(
@@ -455,6 +682,7 @@ class AgentExecutorManager:
                 "delegated_agents": delegated_agents,
                 "missing": missing,
                 "weak": weak,
+                "contradictions": contradictions,
                 "findings": findings,
             },
         )
@@ -462,8 +690,27 @@ class AgentExecutorManager:
             "approved": approved,
             "missing_evidence": missing,
             "weak_outputs": weak,
+            "cross_agent_contradictions": contradictions,
             "llm_critique": llm_critique,
+            "critique_summary": {
+                "status": "needs_revision" if (missing or weak or contradictions) else "approved",
+                "total_gaps": len(missing) + len(weak) + len(contradictions),
+            },
+            "retry_agents": [],
         }
+
+        retry_agents = []
+        for weakness in weak:
+            retry_agents.append(weakness.split(":", 1)[0].strip())
+        if missing:
+            if "seismic_data" in missing:
+                retry_agents.append("seismic_analyzer")
+            if "well_log_data" in missing:
+                retry_agents.append("well_log_interpreter")
+        if contradictions:
+            retry_agents.extend(["reservoir_characterizer", "exploration_risk_assessor"])
+        evaluation["retry_agents"] = list(dict.fromkeys(retry_agents))
+
         self._log(state, "evaluator", "evaluated", evaluation)
         return evaluation
 
@@ -493,7 +740,13 @@ class AgentExecutorManager:
             state,
             "final_agent",
             "produced_answer",
-            {"status": report.get("status"), "llm_mode": final_llm.get("mode")},
+            {
+                "status": report.get("status"),
+                "llm_mode": final_llm.get("mode"),
+                "input_summary": "Compiled approved findings and evaluator critique",
+                "output_summary": "Generated final synthesis and report payload",
+                "target_agent": "api_response",
+            },
         )
         return report
 
@@ -507,6 +760,9 @@ class AgentExecutorManager:
             shared_memory={
                 "workflow_goal": "Evidence-grounded oil and gas prospect analysis",
                 "llm_configured": self.reasoning_llm is not None,
+                "handoff_notes": {},
+                "latest_evaluation": {},
+                "evaluation_history": [],
             },
         )
         workflow_id = datetime.now().isoformat()
@@ -518,34 +774,58 @@ class AgentExecutorManager:
         for iteration in range(1, max_review_cycles + 1):
             state.iteration = iteration
             delegated_agents = self._planner_delegate(state, quick=quick)
-            for agent_name in delegated_agents:
-                task = AGENT_CONFIGS[agent_name]["description"]
-                context = {
-                    **state.user_input,
-                    "shared_memory": state.shared_memory,
-                    "prior_findings": state.analysis_results,
-                    "seismic_interpretation": state.analysis_results.get("seismic_analyzer", {}),
-                    "petrophysics": state.analysis_results.get("well_log_interpreter", {}),
-                    "reservoir_properties": state.analysis_results.get("reservoir_characterizer", {}),
-                    "evidence_register": state.evidence_register,
-                }
-                result = self.execute_agent(agent_name, task, context)
-                state.analysis_results[agent_name] = result
-                state.completed_agents.append(agent_name)
-                self._log(
-                    state,
-                    agent_name,
-                    "executed",
-                    {
+
+            phase_1 = [name for name in ["seismic_analyzer", "well_log_interpreter"] if name in delegated_agents]
+            phase_2 = [name for name in ["reservoir_characterizer"] if name in delegated_agents]
+            phase_3 = [name for name in ["exploration_risk_assessor"] if name in delegated_agents]
+            remaining = [
+                name
+                for name in delegated_agents
+                if name not in {"seismic_analyzer", "well_log_interpreter", "reservoir_characterizer", "exploration_risk_assessor"}
+            ]
+
+            for phase in [phase_1, phase_2, phase_3, remaining]:
+                phase_results = self._execute_agent_batch(state, phase)
+                for agent_name, result in phase_results.items():
+                    state.analysis_results[agent_name] = result
+                    state.completed_agents.append(agent_name)
+                    state.shared_memory["handoff_notes"][agent_name] = {
+                        "iteration": iteration,
+                        "tool_health": self._summarize_tool_health(
+                            result.get("tool_results", {})
+                        ),
                         "status": result.get("status"),
-                        "tools": list(result.get("tool_results", {}).keys()),
-                        "llm_mode": result.get("result", {}).get("mode")
-                        if isinstance(result.get("result"), dict)
-                        else "llm",
-                    },
-                )
+                    }
+                    self._log(
+                        state,
+                        agent_name,
+                        "executed",
+                        {
+                            "status": result.get("status"),
+                            "tools": list(result.get("tool_results", {}).keys()),
+                            "llm_mode": result.get("result", {}).get("mode")
+                            if isinstance(result.get("result"), dict)
+                            else "llm",
+                            "input_summary": f"Executed specialist analysis for {agent_name}",
+                            "output_summary": (
+                                f"Produced {len(result.get('tool_results', {}))} tool outputs"
+                            ),
+                            "target_agent": (
+                                "reservoir_characterizer"
+                                if agent_name in {"seismic_analyzer", "well_log_interpreter"}
+                                else (
+                                    "exploration_risk_assessor"
+                                    if agent_name == "reservoir_characterizer"
+                                    else "report_generator"
+                                )
+                            ),
+                            "confidence": 0.82 if result.get("status") == "success" else 0.4,
+                        },
+                    )
 
             evaluation = self._evaluate_iteration(state, delegated_agents)
+            state.shared_memory["latest_evaluation"] = evaluation
+            state.shared_memory["evaluation_history"].append(evaluation)
             if evaluation["approved"]:
                 break
             self._log(
@@ -570,6 +850,7 @@ class AgentExecutorManager:
             "shared_memory": state.shared_memory,
             "evidence_register": state.evidence_register,
             "collaboration_log": state.collaboration_log,
+            "agent_logs": state.agent_logs,
             "evaluation": evaluation,
             "agents_executed": state.completed_agents,
             "findings": state.analysis_results,
