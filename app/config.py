@@ -60,7 +60,7 @@ class Config:
     # Agent Configuration
     MAX_ITERATIONS: int = int(os.getenv("MAX_ITERATIONS", 10))
     AGENT_TIMEOUT: int = int(os.getenv("AGENT_TIMEOUT", 300))
-    ENABLE_PARALLEL_AGENTS: bool = os.getenv("ENABLE_PARALLEL_AGENTS", "true").lower() in {
+    ENABLE_PARALLEL_AGENTS: bool = os.getenv("ENABLE_PARALLEL_AGENTS", "false").lower() in {
         "1",
         "true",
         "yes",

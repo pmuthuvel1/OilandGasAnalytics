@@ -2,7 +2,6 @@
 
 import json
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -88,6 +87,31 @@ WELL_LOG_TOOLS = {
 REPORT_LIST_TOOLS = {
     "synthesize_analysis",
     "format_recommendations",
+}
+
+# Canonical sequential execution order after collaboration + critique.
+SEQUENTIAL_EXECUTION_ORDER = [
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor",
+]
+
+UPSTREAM_DEPENDENCIES = {
+    "seismic_analyzer": [],
+    "well_log_interpreter": [],
+    "reservoir_characterizer": ["seismic_analyzer", "well_log_interpreter"],
+    "exploration_risk_assessor": [
+        "seismic_analyzer",
+        "well_log_interpreter",
+        "reservoir_characterizer",
+    ],
+    "report_generator": [
+        "seismic_analyzer",
+        "well_log_interpreter",
+        "reservoir_characterizer",
+        "exploration_risk_assessor",
+    ],
 }
 
 
@@ -428,26 +452,27 @@ class AgentExecutorManager:
             "healthy": not failed_tools and bool(tool_results),
         }
 
+    def _order_agents_sequential(self, agent_names: List[str]) -> List[str]:
+        """Return agents in canonical subsurface workflow order."""
+
+        order_index = {name: index for index, name in enumerate(SEQUENTIAL_EXECUTION_ORDER)}
+        return sorted(agent_names, key=lambda name: order_index.get(name, 999))
+
+    def _next_agent_in_chain(self, agent_name: str, delegated_agents: List[str]) -> str:
+        """Resolve the next specialist in the sequential chain."""
+
+        ordered = self._order_agents_sequential(delegated_agents)
+        if agent_name not in ordered:
+            return "report_generator"
+        position = ordered.index(agent_name)
+        if position + 1 < len(ordered):
+            return ordered[position + 1]
+        return "report_generator"
+
     def _build_collaboration_packet(self, state: AgentState, agent_name: str) -> Dict[str, Any]:
         """Create focused cross-agent context instead of passing raw state only."""
 
-        upstream_map = {
-            "seismic_analyzer": [],
-            "well_log_interpreter": [],
-            "reservoir_characterizer": ["seismic_analyzer", "well_log_interpreter"],
-            "exploration_risk_assessor": [
-                "seismic_analyzer",
-                "well_log_interpreter",
-                "reservoir_characterizer",
-            ],
-            "report_generator": [
-                "seismic_analyzer",
-                "well_log_interpreter",
-                "reservoir_characterizer",
-                "exploration_risk_assessor",
-            ],
-        }
-        upstream_agents = upstream_map.get(agent_name, [])
+        upstream_agents = UPSTREAM_DEPENDENCIES.get(agent_name, [])
         upstream_notes: List[Dict[str, Any]] = []
         for upstream in upstream_agents:
             upstream_result = state.analysis_results.get(upstream, {})
@@ -478,7 +503,136 @@ class AgentExecutorManager:
                 ),
             },
             "user_goal": state.shared_memory.get("workflow_goal", ""),
+            "collaboration_briefs": state.shared_memory.get("collaboration_briefs", {}),
+            "pre_execution_critique": state.shared_memory.get("pre_execution_critique", {}),
         }
+
+    def _run_collaboration_phase(
+        self, state: AgentState, delegated_agents: List[str]
+    ) -> Dict[str, Any]:
+        """Collaboration round: each agent states needs and handoffs before execution."""
+
+        ordered_agents = self._order_agents_sequential(delegated_agents)
+        briefs: Dict[str, Any] = {}
+        prior_summaries: List[str] = []
+
+        for agent_name in ordered_agents:
+            role_key = agent_name if agent_name in AGENT_INSTRUCTIONS else "planner"
+            target_agent = self._next_agent_in_chain(agent_name, delegated_agents)
+            collaboration_payload = {
+                "phase": "pre_execution_collaboration",
+                "agent": agent_name,
+                "planned_upstream": UPSTREAM_DEPENDENCIES.get(agent_name, []),
+                "available_evidence": sorted(state.user_input.keys()),
+                "data_sources": state.user_input.get("data_sources", []),
+                "prior_agent_briefs": prior_summaries,
+                "pre_execution_critique": state.shared_memory.get("pre_execution_critique", {}),
+            }
+            brief = self._invoke_reasoning_llm(
+                role_key,
+                (
+                    "Collaboration only (no fabricated tool outputs). State: "
+                    "1) evidence you require, 2) deliverables for downstream agents, "
+                    "3) risks/uncertainties to flag before execution."
+                ),
+                collaboration_payload,
+            )
+            briefs[agent_name] = brief
+            brief_text = (
+                brief.get("content", "")
+                if isinstance(brief, dict) and brief.get("mode") == "llm"
+                else json.dumps(brief, default=_json_default)
+            )
+            prior_summaries.append(f"{AGENT_CONFIGS[agent_name]['name']}: {brief_text}")
+            self._log(
+                state,
+                agent_name,
+                "collaboration_brief",
+                {
+                    "status": "success",
+                    "target_agent": target_agent,
+                    "input_summary": (
+                        f"Reviewed evidence keys: {', '.join(sorted(state.user_input.keys())[:8])}"
+                    ),
+                    "output_summary": (
+                        "Published collaboration brief for sequential execution chain"
+                    ),
+                    "brief": brief,
+                },
+            )
+
+        state.shared_memory["collaboration_briefs"] = briefs
+        return {"agent_briefs": briefs, "execution_order": ordered_agents}
+
+    def _assess_evidence_gaps(
+        self, state: AgentState, delegated_agents: List[str]
+    ) -> Dict[str, List[str]]:
+        """Deterministic evidence gap checks used in critique phases."""
+
+        missing: List[str] = []
+        if "seismic_analyzer" in delegated_agents and not state.user_input.get("seismic_data"):
+            missing.append("seismic_data")
+        if "well_log_interpreter" in delegated_agents and not state.user_input.get("well_log_data"):
+            missing.append("well_log_data")
+        return {"missing_evidence": missing}
+
+    def _run_pre_execution_critique(
+        self, state: AgentState, delegated_agents: List[str]
+    ) -> Dict[str, Any]:
+        """Critique collaboration plan and evidence readiness before any specialist runs."""
+
+        gaps = self._assess_evidence_gaps(state, delegated_agents)
+        missing = gaps["missing_evidence"]
+        collaboration_briefs = state.shared_memory.get("collaboration_briefs", {})
+
+        llm_critique = self._invoke_reasoning_llm(
+            "evaluator",
+            (
+                "Pre-execution critique only. Review collaboration briefs and evidence. "
+                "Return approve_to_execute or request_revision with concrete gaps."
+            ),
+            {
+                "phase": "pre_execution",
+                "delegated_agents": delegated_agents,
+                "execution_order": self._order_agents_sequential(delegated_agents),
+                "missing_evidence": missing,
+                "collaboration_briefs": collaboration_briefs,
+                "data_sources": state.user_input.get("data_sources", []),
+            },
+        )
+
+        ready_to_execute = not missing
+        critique = {
+            "phase": "pre_execution",
+            "ready_to_execute": ready_to_execute,
+            "missing_evidence": missing,
+            "collaboration_reviewed": list(collaboration_briefs.keys()),
+            "execution_order": self._order_agents_sequential(delegated_agents),
+            "llm_critique": llm_critique,
+            "critique_summary": {
+                "status": "approved_for_execution" if ready_to_execute else "needs_revision",
+                "total_gaps": len(missing),
+            },
+        }
+        state.shared_memory["pre_execution_critique"] = critique
+        self._log(
+            state,
+            "evaluator",
+            "pre_execution_critique",
+            {
+                **critique,
+                "status": "success" if ready_to_execute else "needs_revision",
+                "target_agent": delegated_agents[0] if delegated_agents else "planner",
+                "input_summary": "Reviewed collaboration briefs and available evidence",
+                "output_summary": (
+                    "Approved sequential execution"
+                    if ready_to_execute
+                    else f"Blocked pending evidence: {', '.join(missing)}"
+                ),
+                "confidence": 0.85 if ready_to_execute else 0.45,
+            },
+        )
+        return critique
 
     def _research_missing_context(self, state: AgentState) -> None:
         """Load local reference data and add open-data recommendations."""
@@ -529,48 +683,50 @@ class AgentExecutorManager:
             "evidence_register": state.evidence_register,
         }
 
-    def _execute_agent_batch(
+    def _execute_agents_sequential(
         self, state: AgentState, agent_names: List[str]
     ) -> Dict[str, Dict[str, Any]]:
-        """Execute a batch of agents, with optional parallelism for independent work."""
+        """Execute specialists one-by-one in subsurface dependency order."""
 
-        if not agent_names:
-            return {}
-
-        max_workers = max(
-            1,
-            min(self.config.PARALLEL_AGENT_WORKERS, len(agent_names)),
-        )
-        should_parallelize = (
-            self.config.ENABLE_PARALLEL_AGENTS
-            and len(agent_names) > 1
-            and self.reasoning_llm is None
-        )
-
-        def _run_single(agent_name: str) -> Dict[str, Any]:
+        ordered_results: Dict[str, Dict[str, Any]] = {}
+        for agent_name in self._order_agents_sequential(agent_names):
             task = AGENT_CONFIGS[agent_name]["description"]
             context = self._build_agent_context(state)
             context["collaboration_packet"] = self._build_collaboration_packet(
                 state, agent_name
             )
-            return self.execute_agent(agent_name, task, context)
-
-        ordered_results: Dict[str, Dict[str, Any]] = {}
-        if should_parallelize:
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
-                future_map = {
-                    pool.submit(_run_single, agent_name): agent_name
-                    for agent_name in agent_names
-                }
-                for future in as_completed(future_map):
-                    agent_name = future_map[future]
-                    ordered_results[agent_name] = future.result()
-            # Restore planner order for deterministic logs/output.
-            ordered_results = {agent_name: ordered_results[agent_name] for agent_name in agent_names}
-        else:
-            for agent_name in agent_names:
-                ordered_results[agent_name] = _run_single(agent_name)
-
+            context["execution_mode"] = "sequential"
+            result = self.execute_agent(agent_name, task, context)
+            ordered_results[agent_name] = result
+            state.analysis_results[agent_name] = result
+            state.completed_agents.append(agent_name)
+            state.shared_memory["handoff_notes"][agent_name] = {
+                "iteration": state.iteration,
+                "tool_health": self._summarize_tool_health(result.get("tool_results", {})),
+                "status": result.get("status"),
+            }
+            self._log(
+                state,
+                agent_name,
+                "executed",
+                {
+                    "status": result.get("status"),
+                    "tools": list(result.get("tool_results", {}).keys()),
+                    "llm_mode": result.get("result", {}).get("mode")
+                    if isinstance(result.get("result"), dict)
+                    else "llm",
+                    "input_summary": (
+                        f"Sequential execution step for {agent_name} "
+                        f"(after collaboration and pre-execution critique)"
+                    ),
+                    "output_summary": (
+                        f"Produced {len(result.get('tool_results', {}))} tool outputs; "
+                        f"handoff to {self._next_agent_in_chain(agent_name, agent_names)}"
+                    ),
+                    "target_agent": self._next_agent_in_chain(agent_name, agent_names),
+                    "confidence": 0.82 if result.get("status") == "success" else 0.4,
+                },
+            )
         return ordered_results
 
     def execute_agent(
@@ -632,12 +788,8 @@ class AgentExecutorManager:
         """Critique outputs and request retries when evidence is missing."""
 
         findings = state.analysis_results
-        missing: List[str] = []
+        missing = self._assess_evidence_gaps(state, delegated_agents)["missing_evidence"]
         weak: List[str] = []
-        if "seismic_analyzer" in delegated_agents and not state.user_input.get("seismic_data"):
-            missing.append("seismic_data")
-        if "well_log_interpreter" in delegated_agents and not state.user_input.get("well_log_data"):
-            missing.append("well_log_data")
 
         for agent_name in delegated_agents:
             result = findings.get(agent_name, {})
@@ -677,16 +829,20 @@ class AgentExecutorManager:
         approved = not missing and not weak
         llm_critique = self._invoke_reasoning_llm(
             "evaluator",
-            "Critique the iteration. State approve/request_revision and evidence gaps.",
+            "Post-execution critique. State approve/request_revision and evidence gaps.",
             {
+                "phase": "post_execution",
                 "delegated_agents": delegated_agents,
                 "missing": missing,
                 "weak": weak,
                 "contradictions": contradictions,
                 "findings": findings,
+                "collaboration_briefs": state.shared_memory.get("collaboration_briefs", {}),
+                "pre_execution_critique": state.shared_memory.get("pre_execution_critique", {}),
             },
         )
         evaluation = {
+            "phase": "post_execution",
             "approved": approved,
             "missing_evidence": missing,
             "weak_outputs": weak,
@@ -711,7 +867,19 @@ class AgentExecutorManager:
             retry_agents.extend(["reservoir_characterizer", "exploration_risk_assessor"])
         evaluation["retry_agents"] = list(dict.fromkeys(retry_agents))
 
-        self._log(state, "evaluator", "evaluated", evaluation)
+        self._log(
+            state,
+            "evaluator",
+            "post_execution_critique",
+            {
+                **evaluation,
+                "status": "success" if approved else "needs_revision",
+                "target_agent": "planner",
+                "input_summary": "Reviewed sequential execution outputs and tool evidence",
+                "output_summary": evaluation["critique_summary"]["status"],
+                "confidence": 0.88 if approved else 0.5,
+            },
+        )
         return evaluation
 
     def _finalize_report(self, state: AgentState, evaluation: Dict[str, Any]) -> Dict[str, Any]:
@@ -753,14 +921,17 @@ class AgentExecutorManager:
     def execute_collaborative_workflow(
         self, user_input: Dict[str, Any], quick: bool = False, max_review_cycles: int = 2
     ) -> Dict[str, Any]:
-        """Run Planner -> Research -> Executor -> Evaluator retry loop -> Final."""
+        """Run collaborate -> critique -> sequential execution -> post-critique -> report."""
 
         state = AgentState(
             user_input=dict(user_input),
             shared_memory={
                 "workflow_goal": "Evidence-grounded oil and gas prospect analysis",
                 "llm_configured": self.reasoning_llm is not None,
+                "execution_mode": "sequential",
                 "handoff_notes": {},
+                "collaboration_briefs": {},
+                "pre_execution_critique": {},
                 "latest_evaluation": {},
                 "evaluation_history": [],
             },
@@ -775,53 +946,29 @@ class AgentExecutorManager:
             state.iteration = iteration
             delegated_agents = self._planner_delegate(state, quick=quick)
 
-            phase_1 = [name for name in ["seismic_analyzer", "well_log_interpreter"] if name in delegated_agents]
-            phase_2 = [name for name in ["reservoir_characterizer"] if name in delegated_agents]
-            phase_3 = [name for name in ["exploration_risk_assessor"] if name in delegated_agents]
-            remaining = [
-                name
-                for name in delegated_agents
-                if name not in {"seismic_analyzer", "well_log_interpreter", "reservoir_characterizer", "exploration_risk_assessor"}
-            ]
+            # Phase 1: collaboration (no tools)
+            collaboration = self._run_collaboration_phase(state, delegated_agents)
 
-            for phase in [phase_1, phase_2, phase_3, remaining]:
-                phase_results = self._execute_agent_batch(state, phase)
-                for agent_name, result in phase_results.items():
-                    state.analysis_results[agent_name] = result
-                    state.completed_agents.append(agent_name)
-                    state.shared_memory["handoff_notes"][agent_name] = {
-                        "iteration": iteration,
-                        "tool_health": self._summarize_tool_health(
-                            result.get("tool_results", {})
-                        ),
-                        "status": result.get("status"),
-                    }
-                    self._log(
-                        state,
-                        agent_name,
-                        "executed",
-                        {
-                            "status": result.get("status"),
-                            "tools": list(result.get("tool_results", {}).keys()),
-                            "llm_mode": result.get("result", {}).get("mode")
-                            if isinstance(result.get("result"), dict)
-                            else "llm",
-                            "input_summary": f"Executed specialist analysis for {agent_name}",
-                            "output_summary": (
-                                f"Produced {len(result.get('tool_results', {}))} tool outputs"
-                            ),
-                            "target_agent": (
-                                "reservoir_characterizer"
-                                if agent_name in {"seismic_analyzer", "well_log_interpreter"}
-                                else (
-                                    "exploration_risk_assessor"
-                                    if agent_name == "reservoir_characterizer"
-                                    else "report_generator"
-                                )
-                            ),
-                            "confidence": 0.82 if result.get("status") == "success" else 0.4,
-                        },
-                    )
+            # Phase 2: pre-execution critique
+            pre_critique = self._run_pre_execution_critique(state, delegated_agents)
+            if not pre_critique.get("ready_to_execute"):
+                self._log(
+                    state,
+                    "planner",
+                    "revision_requested",
+                    {
+                        "phase": "pre_execution",
+                        "missing_evidence": pre_critique.get("missing_evidence", []),
+                        "next_action": "research_agent_reload_then_retry",
+                    },
+                )
+                self._research_missing_context(state)
+                delegated_agents = self._planner_delegate(state, quick=quick)
+                collaboration = self._run_collaboration_phase(state, delegated_agents)
+                pre_critique = self._run_pre_execution_critique(state, delegated_agents)
+
+            # Phase 3: sequential specialist execution (tools + optional LLM)
+            self._execute_agents_sequential(state, delegated_agents)
 
             evaluation = self._evaluate_iteration(state, delegated_agents)
             state.shared_memory["latest_evaluation"] = evaluation
@@ -846,7 +993,20 @@ class AgentExecutorManager:
         return {
             "workflow_id": workflow_id,
             "status": "success" if evaluation.get("approved") else "partial",
+            "execution_mode": "sequential",
+            "workflow_phases": [
+                "research",
+                "planner_delegation",
+                "collaboration",
+                "pre_execution_critique",
+                "sequential_execution",
+                "post_execution_critique",
+                "report",
+            ],
+            "collaboration": state.shared_memory.get("collaboration_briefs", {}),
+            "pre_execution_critique": state.shared_memory.get("pre_execution_critique", {}),
             "planner_delegation": delegated_agents,
+            "sequential_execution_order": self._order_agents_sequential(delegated_agents),
             "shared_memory": state.shared_memory,
             "evidence_register": state.evidence_register,
             "collaboration_log": state.collaboration_log,
