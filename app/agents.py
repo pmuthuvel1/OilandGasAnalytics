@@ -24,7 +24,7 @@ def _is_reasoning_model(model_name: Optional[str]) -> bool:
     name = model_name.lower()
     return any(name.startswith(prefix) for prefix in _REASONING_MODEL_PREFIXES)
 
-from .config import AGENT_CONFIGS, get_config
+from .config import AGENT_CONFIGS, DEFAULT_OPENAI_BASE_URL, get_config
 from .data_sources import SEG_OPEN_DATA_SOURCES, enrich_with_reference_data
 from .tools import TOOLS
 from . import memory as persistent_memory
@@ -249,10 +249,11 @@ def _create_llm(temperature: float = 0.2, model: Optional[str] = None) -> Option
         llm_params["base_url"] = config.OPENAI_BASE_URL
 
     logger.info(
-        "Initialized LLM model=%s base_url=%s (source=%s) timeout=%ss",
+        "Initialized LLM model=%s base_url=%s (source=%s) api_key_source=%s timeout=%ss",
         chosen_model,
         config.OPENAI_BASE_URL,
         config.OPENAI_BASE_URL_SOURCE,
+        config.OPENAI_API_KEY_SOURCE,
         config.OPENAI_REQUEST_TIMEOUT,
     )
     return ChatOpenAI(**llm_params)
@@ -291,10 +292,11 @@ def _create_raw_openai_client(model: Optional[str] = None):
     client = OpenAI(**kwargs)
     chosen = model or config.COMPASS_REASONING_MODEL or config.OPENAI_MODEL
     logger.info(
-        "Initialized raw OpenAI client model=%s base_url=%s (source=%s)",
+        "Initialized raw OpenAI client model=%s base_url=%s (source=%s) api_key_source=%s",
         chosen,
         config.OPENAI_BASE_URL,
         config.OPENAI_BASE_URL_SOURCE,
+        config.OPENAI_API_KEY_SOURCE,
     )
     return client, chosen
 
@@ -445,8 +447,13 @@ class AgentExecutorManager:
         retry_count: int = 0,
         status: str = "success",
         extra: Optional[Dict[str, Any]] = None,
+        span_id: Optional[str] = None,
     ) -> None:
-        """Emit a single agent trace record to the per-run JSONL trace file."""
+        """Emit a single agent trace record to the per-run JSONL trace file.
+
+        A fresh ``span_id`` is auto-generated for each record by
+        :func:`app.logging_utils.write_trace` unless one is supplied here.
+        """
         self._ensure_trace()
         try:
             write_trace(
@@ -456,6 +463,7 @@ class AgentExecutorManager:
                 input_summary=_summarize(input_summary),
                 output_summary=_summarize(output_summary, limit=700),
                 trace_id=self.trace_id,
+                span_id=span_id,
                 target_agent=target_agent,
                 confidence=confidence,
                 retry_count=retry_count,
@@ -1249,6 +1257,38 @@ class AgentExecutorManager:
         workflow_id = datetime.now().isoformat()
         # Fresh per-run trace file/id so each workflow has an isolated log.
         self.trace_file, self.trace_id = new_trace_file()
+
+        # Record the resolved LLM configuration as the very first trace event
+        # so every run's JSONL log clearly shows where OPENAI_API_KEY and
+        # OPENAI_BASE_URL were sourced from (env vs. default fallback) and
+        # which Compass models are active. The key itself is never logged.
+        cfg = self.config
+        api_key_present = bool(cfg.OPENAI_API_KEY) and cfg.OPENAI_API_KEY_SOURCE == "env"
+        self._trace(
+            agent_name="AgentExecutorManager",
+            action="llm_config_resolved",
+            input_summary={
+                "workflow_id": workflow_id,
+                "sample_mode": cfg.SAMPLE_MODE,
+            },
+            output_summary={
+                "llm_enabled": cfg.llm_enabled,
+                "openai_api_key_present": api_key_present,
+                "openai_api_key_source": cfg.OPENAI_API_KEY_SOURCE,
+                "openai_base_url": cfg.OPENAI_BASE_URL,
+                "openai_base_url_source": cfg.OPENAI_BASE_URL_SOURCE,
+                "compass_chat_model": cfg.COMPASS_CHAT_MODEL,
+                "compass_reasoning_model": cfg.COMPASS_REASONING_MODEL,
+                "compass_embedding_model": cfg.COMPASS_EMBEDDING_MODEL,
+                "reasoning_client_ready": self.reasoning_client is not None,
+            },
+            status="success" if cfg.llm_enabled else "skipped",
+            extra={
+                "default_base_url_fallback": DEFAULT_OPENAI_BASE_URL,
+                "trace_file": self.trace_file,
+            },
+        )
+
         obs.emit_event(
             "workflow.start",
             workflow_id=workflow_id,
