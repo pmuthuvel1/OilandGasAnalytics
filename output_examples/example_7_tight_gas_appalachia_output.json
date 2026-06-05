@@ -1,0 +1,1166 @@
+{
+  "workflow_id": "<redacted-for-snapshot>",
+  "trace_id": "<redacted-for-snapshot>",
+  "trace_file": "<redacted-for-snapshot>",
+  "status": "blocked",
+  "planner_delegation": [
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor"
+  ],
+  "shared_memory": {
+    "workflow_goal": "Evidence-grounded oil and gas prospect analysis",
+    "llm_configured": false,
+    "needs": [],
+    "rag_retrieval": {
+      "coverage": "empty",
+      "attempts": [
+        {
+          "query": "TightGas-Appalachia-007 Tight-gas sand play. Sub-6% matrix porosity, gas-saturated based on resistivity > 175 ohm-m. Productivity hinges on hydraulic-fracture completion design.",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "TightGas-Appalachia-007 Tight-gas sand play. Sub-6% matrix porosity, gas-saturated based on resistivity > 175 ohm-m. Productivity hinges on hydraulic-fracture completion design. reservoir porosity permeability",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "TightGas-Appalachia-007 Tight-gas sand play. Sub-6% matrix porosity, gas-saturated based on resistivity > 175 ohm-m. Productivity hinges on hydraulic-fracture completion design. seismic amplitude horizon fault",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "TightGas-Appalachia-007 Tight-gas sand play. Sub-6% matrix porosity, gas-saturated based on resistivity > 175 ohm-m. Productivity hinges on hydraulic-fracture completion design. well log lithology gas sand",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "TightGas-Appalachia-007 Tight-gas sand play. Sub-6% matrix porosity, gas-saturated based on resistivity > 175 ohm-m. Productivity hinges on hydraulic-fracture completion design. oil and gas exploration risk",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        }
+      ],
+      "final_query": "TightGas-Appalachia-007 Tight-gas sand play. Sub-6% matrix porosity, gas-saturated based on resistivity > 175 ohm-m. Productivity hinges on hydraulic-fracture completion design. oil and gas exploration risk"
+    },
+    "last_evaluation": {
+      "approved": false,
+      "missing_evidence": [],
+      "weak_outputs": [],
+      "quality_score": 0.415,
+      "quality_threshold": 0.45,
+      "risk_level": "UNKNOWN",
+      "report_gate": {
+        "may_publish": false,
+        "threshold": 0.45,
+        "blocking_reasons": [
+          "quality_score=0.415<0.45"
+        ]
+      },
+      "llm_critique": {
+        "mode": "llm_skipped",
+        "reason": "OPENAI_API_KEY is not configured or openai package is unavailable.",
+        "escalated": false
+      }
+    }
+  },
+  "evidence_register": [],
+  "collaboration_log": [
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 0,
+      "agent": "planner",
+      "action": "started",
+      "details": {
+        "workflow_id": "<redacted-for-snapshot>",
+        "quick": false
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 0,
+      "agent": "research_agent",
+      "action": "loaded_context",
+      "details": {
+        "keys_added": [
+          "data_sources",
+          "open_data_catalog"
+        ],
+        "local_sources": [],
+        "open_data_recommendations": [
+          {
+            "name": "SEAM Time Lapse Pilot Sample",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "16.3 MB",
+            "formats": [
+              "SEG-Y",
+              "PDF documentation"
+            ],
+            "use_case": "Small open seismic sample suitable for workflow testing."
+          },
+          {
+            "name": "SEAM Phase I Interpretation Challenge",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "3 GB per depth/time challenge package",
+            "formats": [
+              "SEG-Y",
+              "interpretation challenge data"
+            ],
+            "use_case": "Large seismic interpretation benchmark when local storage allows."
+          },
+          {
+            "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "600 KB",
+            "formats": [
+              "SEG-Y"
+            ],
+            "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+          },
+          {
+            "name": "SEG Open Data Wiki Catalog",
+            "url": "https://wiki.seg.org/wiki/Open_data",
+            "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+            "formats": [
+              "SEG-Y",
+              "well logs",
+              "velocity models",
+              "documentation"
+            ],
+            "use_case": "Browse candidate real-world public seismic and well-log datasets."
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 0,
+      "agent": "rag_agent",
+      "action": "no_hits",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "planner",
+      "action": "requested_retrieval",
+      "details": {
+        "reason": "rag_coverage=empty",
+        "iteration": 1
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "planner",
+      "action": "delegated",
+      "details": {
+        "agents": [
+          "seismic_analyzer",
+          "well_log_interpreter",
+          "reservoir_characterizer",
+          "exploration_risk_assessor"
+        ],
+        "branch_reason": {
+          "force_risk": false,
+          "rag_coverage": "empty",
+          "missing": []
+        },
+        "llm_plan_mode": "llm_skipped"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "seismic_analyzer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "analyze_seismic_amplitude",
+          "detect_faults",
+          "pick_horizons"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "well_log_interpreter",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "classify_lithology",
+          "identify_fluids",
+          "estimate_porosity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "reservoir_characterizer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "estimate_permeability",
+          "analyze_saturation",
+          "predict_pressure"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "exploration_risk_assessor",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "evaluate_trap",
+          "calculate_volumes",
+          "assess_seal_integrity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "evaluator",
+      "action": "evaluated",
+      "details": {
+        "approved": false,
+        "missing_evidence": [],
+        "weak_outputs": [],
+        "quality_score": 0.415,
+        "quality_threshold": 0.45,
+        "risk_level": "UNKNOWN",
+        "report_gate": {
+          "may_publish": false,
+          "threshold": 0.45,
+          "blocking_reasons": [
+            "quality_score=0.415<0.45"
+          ]
+        }
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "planner",
+      "action": "revision_requested",
+      "details": {
+        "next_action": "broaden_retrieval_and_retry",
+        "quality_score": 0.415,
+        "risk_level": "UNKNOWN",
+        "missing_evidence": [],
+        "weak_outputs": []
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "research_agent",
+      "action": "loaded_context",
+      "details": {
+        "keys_added": [],
+        "local_sources": [],
+        "open_data_recommendations": [
+          {
+            "name": "SEAM Time Lapse Pilot Sample",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "16.3 MB",
+            "formats": [
+              "SEG-Y",
+              "PDF documentation"
+            ],
+            "use_case": "Small open seismic sample suitable for workflow testing."
+          },
+          {
+            "name": "SEAM Phase I Interpretation Challenge",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "3 GB per depth/time challenge package",
+            "formats": [
+              "SEG-Y",
+              "interpretation challenge data"
+            ],
+            "use_case": "Large seismic interpretation benchmark when local storage allows."
+          },
+          {
+            "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "600 KB",
+            "formats": [
+              "SEG-Y"
+            ],
+            "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+          },
+          {
+            "name": "SEG Open Data Wiki Catalog",
+            "url": "https://wiki.seg.org/wiki/Open_data",
+            "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+            "formats": [
+              "SEG-Y",
+              "well logs",
+              "velocity models",
+              "documentation"
+            ],
+            "use_case": "Browse candidate real-world public seismic and well-log datasets."
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "planner",
+      "action": "requested_retrieval",
+      "details": {
+        "reason": "rag_coverage=empty",
+        "iteration": 2
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "planner",
+      "action": "delegated",
+      "details": {
+        "agents": [
+          "seismic_analyzer",
+          "well_log_interpreter",
+          "reservoir_characterizer",
+          "exploration_risk_assessor"
+        ],
+        "branch_reason": {
+          "force_risk": true,
+          "rag_coverage": "empty",
+          "missing": []
+        },
+        "llm_plan_mode": "llm_skipped"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "seismic_analyzer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "analyze_seismic_amplitude",
+          "detect_faults",
+          "pick_horizons"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "well_log_interpreter",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "classify_lithology",
+          "identify_fluids",
+          "estimate_porosity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "reservoir_characterizer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "estimate_permeability",
+          "analyze_saturation",
+          "predict_pressure"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "exploration_risk_assessor",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "evaluate_trap",
+          "calculate_volumes",
+          "assess_seal_integrity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "evaluator",
+      "action": "evaluated",
+      "details": {
+        "approved": false,
+        "missing_evidence": [],
+        "weak_outputs": [],
+        "quality_score": 0.415,
+        "quality_threshold": 0.45,
+        "risk_level": "UNKNOWN",
+        "report_gate": {
+          "may_publish": false,
+          "threshold": 0.45,
+          "blocking_reasons": [
+            "quality_score=0.415<0.45"
+          ]
+        }
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "planner",
+      "action": "revision_requested",
+      "details": {
+        "next_action": "broaden_retrieval_and_retry",
+        "quality_score": 0.415,
+        "risk_level": "UNKNOWN",
+        "missing_evidence": [],
+        "weak_outputs": []
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "research_agent",
+      "action": "loaded_context",
+      "details": {
+        "keys_added": [],
+        "local_sources": [],
+        "open_data_recommendations": [
+          {
+            "name": "SEAM Time Lapse Pilot Sample",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "16.3 MB",
+            "formats": [
+              "SEG-Y",
+              "PDF documentation"
+            ],
+            "use_case": "Small open seismic sample suitable for workflow testing."
+          },
+          {
+            "name": "SEAM Phase I Interpretation Challenge",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "3 GB per depth/time challenge package",
+            "formats": [
+              "SEG-Y",
+              "interpretation challenge data"
+            ],
+            "use_case": "Large seismic interpretation benchmark when local storage allows."
+          },
+          {
+            "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "600 KB",
+            "formats": [
+              "SEG-Y"
+            ],
+            "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+          },
+          {
+            "name": "SEG Open Data Wiki Catalog",
+            "url": "https://wiki.seg.org/wiki/Open_data",
+            "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+            "formats": [
+              "SEG-Y",
+              "well logs",
+              "velocity models",
+              "documentation"
+            ],
+            "use_case": "Browse candidate real-world public seismic and well-log datasets."
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "evaluator",
+      "action": "blocked_report_writer",
+      "details": {
+        "reasons": [
+          "quality_score=0.415<0.45"
+        ]
+      }
+    }
+  ],
+  "evaluation": {
+    "approved": false,
+    "missing_evidence": [],
+    "weak_outputs": [],
+    "quality_score": 0.415,
+    "quality_threshold": 0.45,
+    "risk_level": "UNKNOWN",
+    "report_gate": {
+      "may_publish": false,
+      "threshold": 0.45,
+      "blocking_reasons": [
+        "quality_score=0.415<0.45"
+      ]
+    },
+    "llm_critique": {
+      "mode": "llm_skipped",
+      "reason": "OPENAI_API_KEY is not configured or openai package is unavailable.",
+      "escalated": false
+    }
+  },
+  "agents_executed": [
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor",
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor"
+  ],
+  "findings": {
+    "seismic_analyzer": {
+      "status": "success",
+      "agent": "seismic_analyzer",
+      "agent_name": "SeismicAnalyzer",
+      "description": "Analyzes seismic data for subsurface structures",
+      "tool_results": {
+        "analyze_seismic_amplitude": {
+          "mean_amplitude": 0.9388888888888888,
+          "std_amplitude": 0.12422599874998834,
+          "max_amplitude": 1.1,
+          "bright_spot_count": 0,
+          "anomaly_ratio": 0.0,
+          "interpretation": "No significant anomalies",
+          "source_metadata": {}
+        },
+        "detect_faults": {
+          "fault_count": 1,
+          "fault_depths": [
+            9900.0
+          ],
+          "fault_severity": 0.319526627218935,
+          "risk_level": "LOW",
+          "source_metadata": {}
+        },
+        "pick_horizons": {
+          "horizons_picked": 2,
+          "top_horizons": [
+            {
+              "depth": 9900.0,
+              "amplitude": 1.1
+            },
+            {
+              "depth": 10900.0,
+              "amplitude": 1.1
+            }
+          ],
+          "coverage": 22.22222222222222,
+          "source_metadata": {}
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "analyze_seismic_amplitude": {
+            "mean_amplitude": 0.9388888888888888,
+            "std_amplitude": 0.12422599874998834,
+            "max_amplitude": 1.1,
+            "bright_spot_count": 0,
+            "anomaly_ratio": 0.0,
+            "interpretation": "No significant anomalies",
+            "source_metadata": {}
+          },
+          "detect_faults": {
+            "fault_count": 1,
+            "fault_depths": [
+              9900.0
+            ],
+            "fault_severity": 0.319526627218935,
+            "risk_level": "LOW",
+            "source_metadata": {}
+          },
+          "pick_horizons": {
+            "horizons_picked": 2,
+            "top_horizons": [
+              {
+                "depth": 9900.0,
+                "amplitude": 1.1
+              },
+              {
+                "depth": 10900.0,
+                "amplitude": 1.1
+              }
+            ],
+            "coverage": 22.22222222222222,
+            "source_metadata": {}
+          }
+        }
+      }
+    },
+    "well_log_interpreter": {
+      "status": "success",
+      "agent": "well_log_interpreter",
+      "agent_name": "WellLogInterpreter",
+      "description": "Interprets well log data for lithology and fluids",
+      "tool_results": {
+        "classify_lithology": {
+          "primary_lithology": "Mixed lithology",
+          "gamma_ray_avg": 108.0,
+          "resistivity_avg": 218.0,
+          "quality_score": 0.78,
+          "source_metadata": {}
+        },
+        "identify_fluids": {
+          "primary_fluid": "Gas bearing",
+          "confidence": 0.7,
+          "resistivity_avg": 218.0,
+          "porosity_avg": 6.0,
+          "source_metadata": {}
+        },
+        "estimate_porosity": {
+          "average_porosity": 6.0,
+          "max_porosity": 9.0,
+          "min_porosity": 3.0,
+          "porosity_quality": "Poor",
+          "source_metadata": {}
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "classify_lithology": {
+            "primary_lithology": "Mixed lithology",
+            "gamma_ray_avg": 108.0,
+            "resistivity_avg": 218.0,
+            "quality_score": 0.78,
+            "source_metadata": {}
+          },
+          "identify_fluids": {
+            "primary_fluid": "Gas bearing",
+            "confidence": 0.7,
+            "resistivity_avg": 218.0,
+            "porosity_avg": 6.0,
+            "source_metadata": {}
+          },
+          "estimate_porosity": {
+            "average_porosity": 6.0,
+            "max_porosity": 9.0,
+            "min_porosity": 3.0,
+            "porosity_quality": "Poor",
+            "source_metadata": {}
+          }
+        }
+      }
+    },
+    "reservoir_characterizer": {
+      "status": "success",
+      "agent": "reservoir_characterizer",
+      "agent_name": "ReservoirCharacterizer",
+      "description": "Characterizes reservoir properties",
+      "tool_results": {
+        "estimate_permeability": {
+          "estimated_permeability_md": 8818.163074019441,
+          "permeability_class": "High",
+          "basis": "Porosity-based estimation",
+          "source_metadata": {}
+        },
+        "analyze_saturation": {
+          "water_saturation": 0.31446540880503143,
+          "hydrocarbon_saturation": 0.6855345911949686,
+          "saturation_confidence": 0.75,
+          "source_metadata": {}
+        },
+        "predict_pressure": {
+          "predicted_pressure_psi": 5268.450000000001,
+          "normal_pressure_gradient": 0.465,
+          "abnormal_pressure": true,
+          "source_metadata": {}
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "estimate_permeability": {
+            "estimated_permeability_md": 8818.163074019441,
+            "permeability_class": "High",
+            "basis": "Porosity-based estimation",
+            "source_metadata": {}
+          },
+          "analyze_saturation": {
+            "water_saturation": 0.31446540880503143,
+            "hydrocarbon_saturation": 0.6855345911949686,
+            "saturation_confidence": 0.75,
+            "source_metadata": {}
+          },
+          "predict_pressure": {
+            "predicted_pressure_psi": 5268.450000000001,
+            "normal_pressure_gradient": 0.465,
+            "abnormal_pressure": true,
+            "source_metadata": {}
+          }
+        }
+      }
+    },
+    "exploration_risk_assessor": {
+      "status": "success",
+      "agent": "exploration_risk_assessor",
+      "agent_name": "ExplorationRiskAssessor",
+      "description": "Assesses exploration risks and opportunities",
+      "tool_results": {
+        "evaluate_trap": {
+          "trap_type": "stratigraphic",
+          "closure_area_sq_km": 42.0,
+          "trap_integrity": 0.85,
+          "spill_point_depth_m": 10500,
+          "risk_assessment": "Low to Moderate"
+        },
+        "calculate_volumes": {
+          "gross_rock_volume_mmbbl": 200.0,
+          "stock_tank_volume_mmbbl": 134.02310943396228,
+          "recovery_factor": 0.1,
+          "recoverable_reserves_mmbbl": 13.402310943396229,
+          "input_assumptions": {
+            "net_to_gross": 0.7,
+            "porosity_fraction": 0.18,
+            "hydrocarbon_saturation": 0.6855345911949686
+          }
+        },
+        "assess_seal_integrity": {
+          "seal_type": "Shale",
+          "seal_thickness_m": 200,
+          "seal_integrity_score": 0.9,
+          "leakage_risk": "Low",
+          "confidence": 0.85
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "evaluate_trap": {
+            "trap_type": "stratigraphic",
+            "closure_area_sq_km": 42.0,
+            "trap_integrity": 0.85,
+            "spill_point_depth_m": 10500,
+            "risk_assessment": "Low to Moderate"
+          },
+          "calculate_volumes": {
+            "gross_rock_volume_mmbbl": 200.0,
+            "stock_tank_volume_mmbbl": 134.02310943396228,
+            "recovery_factor": 0.1,
+            "recoverable_reserves_mmbbl": 13.402310943396229,
+            "input_assumptions": {
+              "net_to_gross": 0.7,
+              "porosity_fraction": 0.18,
+              "hydrocarbon_saturation": 0.6855345911949686
+            }
+          },
+          "assess_seal_integrity": {
+            "seal_type": "Shale",
+            "seal_thickness_m": 200,
+            "seal_integrity_score": 0.9,
+            "leakage_risk": "Low",
+            "confidence": 0.85
+          }
+        }
+      }
+    }
+  },
+  "seismic_analysis": {
+    "status": "success",
+    "agent": "seismic_analyzer",
+    "agent_name": "SeismicAnalyzer",
+    "description": "Analyzes seismic data for subsurface structures",
+    "tool_results": {
+      "analyze_seismic_amplitude": {
+        "mean_amplitude": 0.9388888888888888,
+        "std_amplitude": 0.12422599874998834,
+        "max_amplitude": 1.1,
+        "bright_spot_count": 0,
+        "anomaly_ratio": 0.0,
+        "interpretation": "No significant anomalies",
+        "source_metadata": {}
+      },
+      "detect_faults": {
+        "fault_count": 1,
+        "fault_depths": [
+          9900.0
+        ],
+        "fault_severity": 0.319526627218935,
+        "risk_level": "LOW",
+        "source_metadata": {}
+      },
+      "pick_horizons": {
+        "horizons_picked": 2,
+        "top_horizons": [
+          {
+            "depth": 9900.0,
+            "amplitude": 1.1
+          },
+          {
+            "depth": 10900.0,
+            "amplitude": 1.1
+          }
+        ],
+        "coverage": 22.22222222222222,
+        "source_metadata": {}
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "analyze_seismic_amplitude": {
+          "mean_amplitude": 0.9388888888888888,
+          "std_amplitude": 0.12422599874998834,
+          "max_amplitude": 1.1,
+          "bright_spot_count": 0,
+          "anomaly_ratio": 0.0,
+          "interpretation": "No significant anomalies",
+          "source_metadata": {}
+        },
+        "detect_faults": {
+          "fault_count": 1,
+          "fault_depths": [
+            9900.0
+          ],
+          "fault_severity": 0.319526627218935,
+          "risk_level": "LOW",
+          "source_metadata": {}
+        },
+        "pick_horizons": {
+          "horizons_picked": 2,
+          "top_horizons": [
+            {
+              "depth": 9900.0,
+              "amplitude": 1.1
+            },
+            {
+              "depth": 10900.0,
+              "amplitude": 1.1
+            }
+          ],
+          "coverage": 22.22222222222222,
+          "source_metadata": {}
+        }
+      }
+    }
+  },
+  "well_log_analysis": {
+    "status": "success",
+    "agent": "well_log_interpreter",
+    "agent_name": "WellLogInterpreter",
+    "description": "Interprets well log data for lithology and fluids",
+    "tool_results": {
+      "classify_lithology": {
+        "primary_lithology": "Mixed lithology",
+        "gamma_ray_avg": 108.0,
+        "resistivity_avg": 218.0,
+        "quality_score": 0.78,
+        "source_metadata": {}
+      },
+      "identify_fluids": {
+        "primary_fluid": "Gas bearing",
+        "confidence": 0.7,
+        "resistivity_avg": 218.0,
+        "porosity_avg": 6.0,
+        "source_metadata": {}
+      },
+      "estimate_porosity": {
+        "average_porosity": 6.0,
+        "max_porosity": 9.0,
+        "min_porosity": 3.0,
+        "porosity_quality": "Poor",
+        "source_metadata": {}
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "classify_lithology": {
+          "primary_lithology": "Mixed lithology",
+          "gamma_ray_avg": 108.0,
+          "resistivity_avg": 218.0,
+          "quality_score": 0.78,
+          "source_metadata": {}
+        },
+        "identify_fluids": {
+          "primary_fluid": "Gas bearing",
+          "confidence": 0.7,
+          "resistivity_avg": 218.0,
+          "porosity_avg": 6.0,
+          "source_metadata": {}
+        },
+        "estimate_porosity": {
+          "average_porosity": 6.0,
+          "max_porosity": 9.0,
+          "min_porosity": 3.0,
+          "porosity_quality": "Poor",
+          "source_metadata": {}
+        }
+      }
+    }
+  },
+  "reservoir_analysis": {
+    "status": "success",
+    "agent": "reservoir_characterizer",
+    "agent_name": "ReservoirCharacterizer",
+    "description": "Characterizes reservoir properties",
+    "tool_results": {
+      "estimate_permeability": {
+        "estimated_permeability_md": 8818.163074019441,
+        "permeability_class": "High",
+        "basis": "Porosity-based estimation",
+        "source_metadata": {}
+      },
+      "analyze_saturation": {
+        "water_saturation": 0.31446540880503143,
+        "hydrocarbon_saturation": 0.6855345911949686,
+        "saturation_confidence": 0.75,
+        "source_metadata": {}
+      },
+      "predict_pressure": {
+        "predicted_pressure_psi": 5268.450000000001,
+        "normal_pressure_gradient": 0.465,
+        "abnormal_pressure": true,
+        "source_metadata": {}
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "estimate_permeability": {
+          "estimated_permeability_md": 8818.163074019441,
+          "permeability_class": "High",
+          "basis": "Porosity-based estimation",
+          "source_metadata": {}
+        },
+        "analyze_saturation": {
+          "water_saturation": 0.31446540880503143,
+          "hydrocarbon_saturation": 0.6855345911949686,
+          "saturation_confidence": 0.75,
+          "source_metadata": {}
+        },
+        "predict_pressure": {
+          "predicted_pressure_psi": 5268.450000000001,
+          "normal_pressure_gradient": 0.465,
+          "abnormal_pressure": true,
+          "source_metadata": {}
+        }
+      }
+    }
+  },
+  "risk_assessment": {
+    "status": "success",
+    "agent": "exploration_risk_assessor",
+    "agent_name": "ExplorationRiskAssessor",
+    "description": "Assesses exploration risks and opportunities",
+    "tool_results": {
+      "evaluate_trap": {
+        "trap_type": "stratigraphic",
+        "closure_area_sq_km": 42.0,
+        "trap_integrity": 0.85,
+        "spill_point_depth_m": 10500,
+        "risk_assessment": "Low to Moderate"
+      },
+      "calculate_volumes": {
+        "gross_rock_volume_mmbbl": 200.0,
+        "stock_tank_volume_mmbbl": 134.02310943396228,
+        "recovery_factor": 0.1,
+        "recoverable_reserves_mmbbl": 13.402310943396229,
+        "input_assumptions": {
+          "net_to_gross": 0.7,
+          "porosity_fraction": 0.18,
+          "hydrocarbon_saturation": 0.6855345911949686
+        }
+      },
+      "assess_seal_integrity": {
+        "seal_type": "Shale",
+        "seal_thickness_m": 200,
+        "seal_integrity_score": 0.9,
+        "leakage_risk": "Low",
+        "confidence": 0.85
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "evaluate_trap": {
+          "trap_type": "stratigraphic",
+          "closure_area_sq_km": 42.0,
+          "trap_integrity": 0.85,
+          "spill_point_depth_m": 10500,
+          "risk_assessment": "Low to Moderate"
+        },
+        "calculate_volumes": {
+          "gross_rock_volume_mmbbl": 200.0,
+          "stock_tank_volume_mmbbl": 134.02310943396228,
+          "recovery_factor": 0.1,
+          "recoverable_reserves_mmbbl": 13.402310943396229,
+          "input_assumptions": {
+            "net_to_gross": 0.7,
+            "porosity_fraction": 0.18,
+            "hydrocarbon_saturation": 0.6855345911949686
+          }
+        },
+        "assess_seal_integrity": {
+          "seal_type": "Shale",
+          "seal_thickness_m": 200,
+          "seal_integrity_score": 0.9,
+          "leakage_risk": "Low",
+          "confidence": 0.85
+        }
+      }
+    }
+  },
+  "final_report": {
+    "status": "blocked",
+    "agent": "report_generator",
+    "agent_name": "ReportGenerator",
+    "description": "Generates comprehensive analysis reports",
+    "tool_results": {},
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "blocked_by_evaluator",
+      "summary": "Report writer was blocked by the evaluator because the quality threshold was not met.",
+      "blocking_reasons": [
+        "quality_score=0.415<0.45"
+      ],
+      "quality_score": 0.415,
+      "quality_threshold": 0.45
+    }
+  },
+  "escalation": {
+    "llm_failure_streak": 0,
+    "escalated_to_sample_mode": false
+  },
+  "messages": "<redacted-for-snapshot>",
+  "open_data_recommendations": [
+    {
+      "name": "SEAM Time Lapse Pilot Sample",
+      "url": "https://seg.org/seam/open-data/",
+      "size": "16.3 MB",
+      "formats": [
+        "SEG-Y",
+        "PDF documentation"
+      ],
+      "use_case": "Small open seismic sample suitable for workflow testing."
+    },
+    {
+      "name": "SEAM Phase I Interpretation Challenge",
+      "url": "https://seg.org/seam/open-data/",
+      "size": "3 GB per depth/time challenge package",
+      "formats": [
+        "SEG-Y",
+        "interpretation challenge data"
+      ],
+      "use_case": "Large seismic interpretation benchmark when local storage allows."
+    },
+    {
+      "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+      "url": "https://seg.org/seam/open-data/",
+      "size": "600 KB",
+      "formats": [
+        "SEG-Y"
+      ],
+      "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+    },
+    {
+      "name": "SEG Open Data Wiki Catalog",
+      "url": "https://wiki.seg.org/wiki/Open_data",
+      "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+      "formats": [
+        "SEG-Y",
+        "well logs",
+        "velocity models",
+        "documentation"
+      ],
+      "use_case": "Browse candidate real-world public seismic and well-log datasets."
+    }
+  ]
+}
