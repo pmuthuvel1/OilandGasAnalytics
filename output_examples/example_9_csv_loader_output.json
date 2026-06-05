@@ -1,0 +1,3806 @@
+{
+  "workflow_id": "<redacted-for-snapshot>",
+  "trace_id": "<redacted-for-snapshot>",
+  "trace_file": "<redacted-for-snapshot>",
+  "status": "blocked",
+  "planner_delegation": [
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor"
+  ],
+  "shared_memory": {
+    "workflow_goal": "Evidence-grounded oil and gas prospect analysis",
+    "llm_configured": false,
+    "needs": [],
+    "rag_retrieval": {
+      "coverage": "empty",
+      "attempts": [
+        {
+          "query": "CSV-Driven-Demo-009 Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed.",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "CSV-Driven-Demo-009 Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed. reservoir porosity permeability",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "CSV-Driven-Demo-009 Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed. seismic amplitude horizon fault",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "CSV-Driven-Demo-009 Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed. well log lithology gas sand",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        },
+        {
+          "query": "CSV-Driven-Demo-009 Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed. oil and gas exploration risk",
+          "hits": 0,
+          "top_score": 0.0,
+          "coverage": "empty"
+        }
+      ],
+      "final_query": "CSV-Driven-Demo-009 Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed. oil and gas exploration risk"
+    },
+    "last_evaluation": {
+      "approved": false,
+      "missing_evidence": [],
+      "weak_outputs": [],
+      "quality_score": 0.475,
+      "quality_threshold": 0.5,
+      "risk_level": "UNKNOWN",
+      "report_gate": {
+        "may_publish": false,
+        "threshold": 0.5,
+        "blocking_reasons": [
+          "quality_score=0.475<0.5"
+        ]
+      },
+      "llm_critique": {
+        "mode": "llm_skipped",
+        "reason": "OPENAI_API_KEY is not configured or openai package is unavailable.",
+        "escalated": false
+      }
+    }
+  },
+  "evidence_register": [
+    {
+      "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+      "rows": 10,
+      "columns": [
+        "seismic_line",
+        "depth_m",
+        "amplitude",
+        "frequency_hz",
+        "phase_quality"
+      ],
+      "numeric_summary": {
+        "depth_m": {
+          "count": 10.0,
+          "mean": 1450.0,
+          "std": 302.765,
+          "min": 1000.0,
+          "25%": 1225.0,
+          "50%": 1450.0,
+          "75%": 1675.0,
+          "max": 1900.0
+        },
+        "amplitude": {
+          "count": 10.0,
+          "mean": 1.789,
+          "std": 0.8679,
+          "min": 0.45,
+          "25%": 1.3025,
+          "50%": 1.77,
+          "75%": 2.2825,
+          "max": 3.21
+        },
+        "frequency_hz": {
+          "count": 10.0,
+          "mean": 20.28,
+          "std": 2.9999,
+          "min": 15.5,
+          "25%": 18.6,
+          "50%": 20.2,
+          "75%": 21.875,
+          "max": 25.4
+        },
+        "phase_quality": {
+          "count": 10.0,
+          "mean": 0.874,
+          "std": 0.032,
+          "min": 0.82,
+          "25%": 0.8525,
+          "50%": 0.875,
+          "75%": 0.8975,
+          "max": 0.92
+        }
+      }
+    },
+    {
+      "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+      "rows": 8,
+      "columns": [
+        "depth_ft",
+        "gamma_ray_api",
+        "resistivity_ohm",
+        "porosity_percent",
+        "sonic_dt_us_ft",
+        "density_sg"
+      ],
+      "numeric_summary": {
+        "depth_ft": {
+          "count": 8.0,
+          "mean": 2350.0,
+          "std": 244.949,
+          "min": 2000.0,
+          "25%": 2175.0,
+          "50%": 2350.0,
+          "75%": 2525.0,
+          "max": 2700.0
+        },
+        "gamma_ray_api": {
+          "count": 8.0,
+          "mean": 92.5,
+          "std": 16.5874,
+          "min": 72.0,
+          "25%": 83.25,
+          "50%": 90.0,
+          "75%": 97.5,
+          "max": 125.0
+        },
+        "resistivity_ohm": {
+          "count": 8.0,
+          "mean": 79.7125,
+          "std": 51.6115,
+          "min": 28.5,
+          "25%": 44.425,
+          "50%": 50.35,
+          "75%": 128.05,
+          "max": 160.2
+        },
+        "porosity_percent": {
+          "count": 8.0,
+          "mean": 18.2125,
+          "std": 6.7279,
+          "min": 6.1,
+          "25%": 15.4,
+          "50%": 17.4,
+          "75%": 22.625,
+          "max": 28.1
+        },
+        "sonic_dt_us_ft": {
+          "count": 8.0,
+          "mean": 62.1625,
+          "std": 5.0008,
+          "min": 55.8,
+          "25%": 58.975,
+          "50%": 61.95,
+          "75%": 63.675,
+          "max": 72.4
+        },
+        "density_sg": {
+          "count": 8.0,
+          "mean": 2.3138,
+          "std": 0.1795,
+          "min": 2.08,
+          "25%": 2.1725,
+          "50%": 2.335,
+          "75%": 2.385,
+          "max": 2.65
+        }
+      }
+    }
+  ],
+  "collaboration_log": [
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 0,
+      "agent": "planner",
+      "action": "started",
+      "details": {
+        "workflow_id": "<redacted-for-snapshot>",
+        "quick": false
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 0,
+      "agent": "research_agent",
+      "action": "loaded_context",
+      "details": {
+        "keys_added": [
+          "data_sources",
+          "open_data_catalog"
+        ],
+        "local_sources": [
+          {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          },
+          {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        ],
+        "open_data_recommendations": [
+          {
+            "name": "SEAM Time Lapse Pilot Sample",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "16.3 MB",
+            "formats": [
+              "SEG-Y",
+              "PDF documentation"
+            ],
+            "use_case": "Small open seismic sample suitable for workflow testing."
+          },
+          {
+            "name": "SEAM Phase I Interpretation Challenge",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "3 GB per depth/time challenge package",
+            "formats": [
+              "SEG-Y",
+              "interpretation challenge data"
+            ],
+            "use_case": "Large seismic interpretation benchmark when local storage allows."
+          },
+          {
+            "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "600 KB",
+            "formats": [
+              "SEG-Y"
+            ],
+            "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+          },
+          {
+            "name": "SEG Open Data Wiki Catalog",
+            "url": "https://wiki.seg.org/wiki/Open_data",
+            "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+            "formats": [
+              "SEG-Y",
+              "well logs",
+              "velocity models",
+              "documentation"
+            ],
+            "use_case": "Browse candidate real-world public seismic and well-log datasets."
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 0,
+      "agent": "rag_agent",
+      "action": "no_hits",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "planner",
+      "action": "requested_retrieval",
+      "details": {
+        "reason": "rag_coverage=empty",
+        "iteration": 1
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "planner",
+      "action": "delegated",
+      "details": {
+        "agents": [
+          "seismic_analyzer",
+          "well_log_interpreter",
+          "reservoir_characterizer",
+          "exploration_risk_assessor"
+        ],
+        "branch_reason": {
+          "force_risk": false,
+          "rag_coverage": "empty",
+          "missing": []
+        },
+        "llm_plan_mode": "llm_skipped"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "seismic_analyzer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "analyze_seismic_amplitude",
+          "detect_faults",
+          "pick_horizons"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "well_log_interpreter",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "classify_lithology",
+          "identify_fluids",
+          "estimate_porosity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "reservoir_characterizer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "estimate_permeability",
+          "analyze_saturation",
+          "predict_pressure"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "exploration_risk_assessor",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "evaluate_trap",
+          "calculate_volumes",
+          "assess_seal_integrity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "evaluator",
+      "action": "evaluated",
+      "details": {
+        "approved": false,
+        "missing_evidence": [],
+        "weak_outputs": [],
+        "quality_score": 0.475,
+        "quality_threshold": 0.5,
+        "risk_level": "UNKNOWN",
+        "report_gate": {
+          "may_publish": false,
+          "threshold": 0.5,
+          "blocking_reasons": [
+            "quality_score=0.475<0.5"
+          ]
+        }
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "planner",
+      "action": "revision_requested",
+      "details": {
+        "next_action": "broaden_retrieval_and_retry",
+        "quality_score": 0.475,
+        "risk_level": "UNKNOWN",
+        "missing_evidence": [],
+        "weak_outputs": []
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "research_agent",
+      "action": "loaded_context",
+      "details": {
+        "keys_added": [],
+        "local_sources": [],
+        "open_data_recommendations": [
+          {
+            "name": "SEAM Time Lapse Pilot Sample",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "16.3 MB",
+            "formats": [
+              "SEG-Y",
+              "PDF documentation"
+            ],
+            "use_case": "Small open seismic sample suitable for workflow testing."
+          },
+          {
+            "name": "SEAM Phase I Interpretation Challenge",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "3 GB per depth/time challenge package",
+            "formats": [
+              "SEG-Y",
+              "interpretation challenge data"
+            ],
+            "use_case": "Large seismic interpretation benchmark when local storage allows."
+          },
+          {
+            "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "600 KB",
+            "formats": [
+              "SEG-Y"
+            ],
+            "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+          },
+          {
+            "name": "SEG Open Data Wiki Catalog",
+            "url": "https://wiki.seg.org/wiki/Open_data",
+            "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+            "formats": [
+              "SEG-Y",
+              "well logs",
+              "velocity models",
+              "documentation"
+            ],
+            "use_case": "Browse candidate real-world public seismic and well-log datasets."
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 1,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "planner",
+      "action": "requested_retrieval",
+      "details": {
+        "reason": "rag_coverage=empty",
+        "iteration": 2
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "planner",
+      "action": "delegated",
+      "details": {
+        "agents": [
+          "seismic_analyzer",
+          "well_log_interpreter",
+          "reservoir_characterizer",
+          "exploration_risk_assessor"
+        ],
+        "branch_reason": {
+          "force_risk": true,
+          "rag_coverage": "empty",
+          "missing": []
+        },
+        "llm_plan_mode": "llm_skipped"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "seismic_analyzer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "analyze_seismic_amplitude",
+          "detect_faults",
+          "pick_horizons"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "well_log_interpreter",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "classify_lithology",
+          "identify_fluids",
+          "estimate_porosity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "reservoir_characterizer",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "estimate_permeability",
+          "analyze_saturation",
+          "predict_pressure"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "exploration_risk_assessor",
+      "action": "executed",
+      "details": {
+        "status": "success",
+        "tools": [
+          "evaluate_trap",
+          "calculate_volumes",
+          "assess_seal_integrity"
+        ],
+        "llm_mode": "tool_only"
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "evaluator",
+      "action": "evaluated",
+      "details": {
+        "approved": false,
+        "missing_evidence": [],
+        "weak_outputs": [],
+        "quality_score": 0.475,
+        "quality_threshold": 0.5,
+        "risk_level": "UNKNOWN",
+        "report_gate": {
+          "may_publish": false,
+          "threshold": 0.5,
+          "blocking_reasons": [
+            "quality_score=0.475<0.5"
+          ]
+        }
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "planner",
+      "action": "revision_requested",
+      "details": {
+        "next_action": "broaden_retrieval_and_retry",
+        "quality_score": 0.475,
+        "risk_level": "UNKNOWN",
+        "missing_evidence": [],
+        "weak_outputs": []
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "research_agent",
+      "action": "loaded_context",
+      "details": {
+        "keys_added": [],
+        "local_sources": [],
+        "open_data_recommendations": [
+          {
+            "name": "SEAM Time Lapse Pilot Sample",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "16.3 MB",
+            "formats": [
+              "SEG-Y",
+              "PDF documentation"
+            ],
+            "use_case": "Small open seismic sample suitable for workflow testing."
+          },
+          {
+            "name": "SEAM Phase I Interpretation Challenge",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "3 GB per depth/time challenge package",
+            "formats": [
+              "SEG-Y",
+              "interpretation challenge data"
+            ],
+            "use_case": "Large seismic interpretation benchmark when local storage allows."
+          },
+          {
+            "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+            "url": "https://seg.org/seam/open-data/",
+            "size": "600 KB",
+            "formats": [
+              "SEG-Y"
+            ],
+            "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+          },
+          {
+            "name": "SEG Open Data Wiki Catalog",
+            "url": "https://wiki.seg.org/wiki/Open_data",
+            "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+            "formats": [
+              "SEG-Y",
+              "well logs",
+              "velocity models",
+              "documentation"
+            ],
+            "use_case": "Browse candidate real-world public seismic and well-log datasets."
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "retriever_agent",
+      "action": "broadened_retry",
+      "details": {
+        "coverage": "empty",
+        "attempts": 5,
+        "hits": 0
+      }
+    },
+    {
+      "timestamp": "<redacted-for-snapshot>",
+      "iteration": 2,
+      "agent": "evaluator",
+      "action": "blocked_report_writer",
+      "details": {
+        "reasons": [
+          "quality_score=0.475<0.5"
+        ]
+      }
+    }
+  ],
+  "evaluation": {
+    "approved": false,
+    "missing_evidence": [],
+    "weak_outputs": [],
+    "quality_score": 0.475,
+    "quality_threshold": 0.5,
+    "risk_level": "UNKNOWN",
+    "report_gate": {
+      "may_publish": false,
+      "threshold": 0.5,
+      "blocking_reasons": [
+        "quality_score=0.475<0.5"
+      ]
+    },
+    "llm_critique": {
+      "mode": "llm_skipped",
+      "reason": "OPENAI_API_KEY is not configured or openai package is unavailable.",
+      "escalated": false
+    }
+  },
+  "agents_executed": [
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor",
+    "seismic_analyzer",
+    "well_log_interpreter",
+    "reservoir_characterizer",
+    "exploration_risk_assessor"
+  ],
+  "findings": {
+    "seismic_analyzer": {
+      "status": "success",
+      "agent": "seismic_analyzer",
+      "agent_name": "SeismicAnalyzer",
+      "description": "Analyzes seismic data for subsurface structures",
+      "tool_results": {
+        "analyze_seismic_amplitude": {
+          "mean_amplitude": 1.7889999999999997,
+          "std_amplitude": 0.8233765845589732,
+          "max_amplitude": 3.21,
+          "bright_spot_count": 0,
+          "anomaly_ratio": 0.0,
+          "interpretation": "No significant anomalies",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          }
+        },
+        "detect_faults": {
+          "fault_count": 0,
+          "fault_depths": [],
+          "fault_severity": 0.7825600894354389,
+          "risk_level": "LOW",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          }
+        },
+        "pick_horizons": {
+          "horizons_picked": 3,
+          "top_horizons": [
+            {
+              "depth": 1400.0,
+              "amplitude": 3.21
+            },
+            {
+              "depth": 1200.0,
+              "amplitude": 2.34
+            },
+            {
+              "depth": 1800.0,
+              "amplitude": 2.11
+            }
+          ],
+          "coverage": 30.0,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          }
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "analyze_seismic_amplitude": {
+            "mean_amplitude": 1.7889999999999997,
+            "std_amplitude": 0.8233765845589732,
+            "max_amplitude": 3.21,
+            "bright_spot_count": 0,
+            "anomaly_ratio": 0.0,
+            "interpretation": "No significant anomalies",
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+              "rows": 10,
+              "columns": [
+                "seismic_line",
+                "depth_m",
+                "amplitude",
+                "frequency_hz",
+                "phase_quality"
+              ],
+              "numeric_summary": {
+                "depth_m": {
+                  "count": 10.0,
+                  "mean": 1450.0,
+                  "std": 302.765,
+                  "min": 1000.0,
+                  "25%": 1225.0,
+                  "50%": 1450.0,
+                  "75%": 1675.0,
+                  "max": 1900.0
+                },
+                "amplitude": {
+                  "count": 10.0,
+                  "mean": 1.789,
+                  "std": 0.8679,
+                  "min": 0.45,
+                  "25%": 1.3025,
+                  "50%": 1.77,
+                  "75%": 2.2825,
+                  "max": 3.21
+                },
+                "frequency_hz": {
+                  "count": 10.0,
+                  "mean": 20.28,
+                  "std": 2.9999,
+                  "min": 15.5,
+                  "25%": 18.6,
+                  "50%": 20.2,
+                  "75%": 21.875,
+                  "max": 25.4
+                },
+                "phase_quality": {
+                  "count": 10.0,
+                  "mean": 0.874,
+                  "std": 0.032,
+                  "min": 0.82,
+                  "25%": 0.8525,
+                  "50%": 0.875,
+                  "75%": 0.8975,
+                  "max": 0.92
+                }
+              }
+            }
+          },
+          "detect_faults": {
+            "fault_count": 0,
+            "fault_depths": [],
+            "fault_severity": 0.7825600894354389,
+            "risk_level": "LOW",
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+              "rows": 10,
+              "columns": [
+                "seismic_line",
+                "depth_m",
+                "amplitude",
+                "frequency_hz",
+                "phase_quality"
+              ],
+              "numeric_summary": {
+                "depth_m": {
+                  "count": 10.0,
+                  "mean": 1450.0,
+                  "std": 302.765,
+                  "min": 1000.0,
+                  "25%": 1225.0,
+                  "50%": 1450.0,
+                  "75%": 1675.0,
+                  "max": 1900.0
+                },
+                "amplitude": {
+                  "count": 10.0,
+                  "mean": 1.789,
+                  "std": 0.8679,
+                  "min": 0.45,
+                  "25%": 1.3025,
+                  "50%": 1.77,
+                  "75%": 2.2825,
+                  "max": 3.21
+                },
+                "frequency_hz": {
+                  "count": 10.0,
+                  "mean": 20.28,
+                  "std": 2.9999,
+                  "min": 15.5,
+                  "25%": 18.6,
+                  "50%": 20.2,
+                  "75%": 21.875,
+                  "max": 25.4
+                },
+                "phase_quality": {
+                  "count": 10.0,
+                  "mean": 0.874,
+                  "std": 0.032,
+                  "min": 0.82,
+                  "25%": 0.8525,
+                  "50%": 0.875,
+                  "75%": 0.8975,
+                  "max": 0.92
+                }
+              }
+            }
+          },
+          "pick_horizons": {
+            "horizons_picked": 3,
+            "top_horizons": [
+              {
+                "depth": 1400.0,
+                "amplitude": 3.21
+              },
+              {
+                "depth": 1200.0,
+                "amplitude": 2.34
+              },
+              {
+                "depth": 1800.0,
+                "amplitude": 2.11
+              }
+            ],
+            "coverage": 30.0,
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+              "rows": 10,
+              "columns": [
+                "seismic_line",
+                "depth_m",
+                "amplitude",
+                "frequency_hz",
+                "phase_quality"
+              ],
+              "numeric_summary": {
+                "depth_m": {
+                  "count": 10.0,
+                  "mean": 1450.0,
+                  "std": 302.765,
+                  "min": 1000.0,
+                  "25%": 1225.0,
+                  "50%": 1450.0,
+                  "75%": 1675.0,
+                  "max": 1900.0
+                },
+                "amplitude": {
+                  "count": 10.0,
+                  "mean": 1.789,
+                  "std": 0.8679,
+                  "min": 0.45,
+                  "25%": 1.3025,
+                  "50%": 1.77,
+                  "75%": 2.2825,
+                  "max": 3.21
+                },
+                "frequency_hz": {
+                  "count": 10.0,
+                  "mean": 20.28,
+                  "std": 2.9999,
+                  "min": 15.5,
+                  "25%": 18.6,
+                  "50%": 20.2,
+                  "75%": 21.875,
+                  "max": 25.4
+                },
+                "phase_quality": {
+                  "count": 10.0,
+                  "mean": 0.874,
+                  "std": 0.032,
+                  "min": 0.82,
+                  "25%": 0.8525,
+                  "50%": 0.875,
+                  "75%": 0.8975,
+                  "max": 0.92
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "well_log_interpreter": {
+      "status": "success",
+      "agent": "well_log_interpreter",
+      "agent_name": "WellLogInterpreter",
+      "description": "Interprets well log data for lithology and fluids",
+      "tool_results": {
+        "classify_lithology": {
+          "primary_lithology": "Mixed lithology",
+          "gamma_ray_avg": 92.5,
+          "resistivity_avg": 79.7125,
+          "quality_score": 0.8833333333333333,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "identify_fluids": {
+          "primary_fluid": "Gas bearing",
+          "confidence": 0.7,
+          "resistivity_avg": 79.7125,
+          "porosity_avg": 18.212500000000002,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "estimate_porosity": {
+          "average_porosity": 18.212500000000002,
+          "max_porosity": 28.1,
+          "min_porosity": 6.1,
+          "porosity_quality": "Good",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "classify_lithology": {
+            "primary_lithology": "Mixed lithology",
+            "gamma_ray_avg": 92.5,
+            "resistivity_avg": 79.7125,
+            "quality_score": 0.8833333333333333,
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+              "rows": 8,
+              "columns": [
+                "depth_ft",
+                "gamma_ray_api",
+                "resistivity_ohm",
+                "porosity_percent",
+                "sonic_dt_us_ft",
+                "density_sg"
+              ],
+              "numeric_summary": {
+                "depth_ft": {
+                  "count": 8.0,
+                  "mean": 2350.0,
+                  "std": 244.949,
+                  "min": 2000.0,
+                  "25%": 2175.0,
+                  "50%": 2350.0,
+                  "75%": 2525.0,
+                  "max": 2700.0
+                },
+                "gamma_ray_api": {
+                  "count": 8.0,
+                  "mean": 92.5,
+                  "std": 16.5874,
+                  "min": 72.0,
+                  "25%": 83.25,
+                  "50%": 90.0,
+                  "75%": 97.5,
+                  "max": 125.0
+                },
+                "resistivity_ohm": {
+                  "count": 8.0,
+                  "mean": 79.7125,
+                  "std": 51.6115,
+                  "min": 28.5,
+                  "25%": 44.425,
+                  "50%": 50.35,
+                  "75%": 128.05,
+                  "max": 160.2
+                },
+                "porosity_percent": {
+                  "count": 8.0,
+                  "mean": 18.2125,
+                  "std": 6.7279,
+                  "min": 6.1,
+                  "25%": 15.4,
+                  "50%": 17.4,
+                  "75%": 22.625,
+                  "max": 28.1
+                },
+                "sonic_dt_us_ft": {
+                  "count": 8.0,
+                  "mean": 62.1625,
+                  "std": 5.0008,
+                  "min": 55.8,
+                  "25%": 58.975,
+                  "50%": 61.95,
+                  "75%": 63.675,
+                  "max": 72.4
+                },
+                "density_sg": {
+                  "count": 8.0,
+                  "mean": 2.3138,
+                  "std": 0.1795,
+                  "min": 2.08,
+                  "25%": 2.1725,
+                  "50%": 2.335,
+                  "75%": 2.385,
+                  "max": 2.65
+                }
+              }
+            }
+          },
+          "identify_fluids": {
+            "primary_fluid": "Gas bearing",
+            "confidence": 0.7,
+            "resistivity_avg": 79.7125,
+            "porosity_avg": 18.212500000000002,
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+              "rows": 8,
+              "columns": [
+                "depth_ft",
+                "gamma_ray_api",
+                "resistivity_ohm",
+                "porosity_percent",
+                "sonic_dt_us_ft",
+                "density_sg"
+              ],
+              "numeric_summary": {
+                "depth_ft": {
+                  "count": 8.0,
+                  "mean": 2350.0,
+                  "std": 244.949,
+                  "min": 2000.0,
+                  "25%": 2175.0,
+                  "50%": 2350.0,
+                  "75%": 2525.0,
+                  "max": 2700.0
+                },
+                "gamma_ray_api": {
+                  "count": 8.0,
+                  "mean": 92.5,
+                  "std": 16.5874,
+                  "min": 72.0,
+                  "25%": 83.25,
+                  "50%": 90.0,
+                  "75%": 97.5,
+                  "max": 125.0
+                },
+                "resistivity_ohm": {
+                  "count": 8.0,
+                  "mean": 79.7125,
+                  "std": 51.6115,
+                  "min": 28.5,
+                  "25%": 44.425,
+                  "50%": 50.35,
+                  "75%": 128.05,
+                  "max": 160.2
+                },
+                "porosity_percent": {
+                  "count": 8.0,
+                  "mean": 18.2125,
+                  "std": 6.7279,
+                  "min": 6.1,
+                  "25%": 15.4,
+                  "50%": 17.4,
+                  "75%": 22.625,
+                  "max": 28.1
+                },
+                "sonic_dt_us_ft": {
+                  "count": 8.0,
+                  "mean": 62.1625,
+                  "std": 5.0008,
+                  "min": 55.8,
+                  "25%": 58.975,
+                  "50%": 61.95,
+                  "75%": 63.675,
+                  "max": 72.4
+                },
+                "density_sg": {
+                  "count": 8.0,
+                  "mean": 2.3138,
+                  "std": 0.1795,
+                  "min": 2.08,
+                  "25%": 2.1725,
+                  "50%": 2.335,
+                  "75%": 2.385,
+                  "max": 2.65
+                }
+              }
+            }
+          },
+          "estimate_porosity": {
+            "average_porosity": 18.212500000000002,
+            "max_porosity": 28.1,
+            "min_porosity": 6.1,
+            "porosity_quality": "Good",
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+              "rows": 8,
+              "columns": [
+                "depth_ft",
+                "gamma_ray_api",
+                "resistivity_ohm",
+                "porosity_percent",
+                "sonic_dt_us_ft",
+                "density_sg"
+              ],
+              "numeric_summary": {
+                "depth_ft": {
+                  "count": 8.0,
+                  "mean": 2350.0,
+                  "std": 244.949,
+                  "min": 2000.0,
+                  "25%": 2175.0,
+                  "50%": 2350.0,
+                  "75%": 2525.0,
+                  "max": 2700.0
+                },
+                "gamma_ray_api": {
+                  "count": 8.0,
+                  "mean": 92.5,
+                  "std": 16.5874,
+                  "min": 72.0,
+                  "25%": 83.25,
+                  "50%": 90.0,
+                  "75%": 97.5,
+                  "max": 125.0
+                },
+                "resistivity_ohm": {
+                  "count": 8.0,
+                  "mean": 79.7125,
+                  "std": 51.6115,
+                  "min": 28.5,
+                  "25%": 44.425,
+                  "50%": 50.35,
+                  "75%": 128.05,
+                  "max": 160.2
+                },
+                "porosity_percent": {
+                  "count": 8.0,
+                  "mean": 18.2125,
+                  "std": 6.7279,
+                  "min": 6.1,
+                  "25%": 15.4,
+                  "50%": 17.4,
+                  "75%": 22.625,
+                  "max": 28.1
+                },
+                "sonic_dt_us_ft": {
+                  "count": 8.0,
+                  "mean": 62.1625,
+                  "std": 5.0008,
+                  "min": 55.8,
+                  "25%": 58.975,
+                  "50%": 61.95,
+                  "75%": 63.675,
+                  "max": 72.4
+                },
+                "density_sg": {
+                  "count": 8.0,
+                  "mean": 2.3138,
+                  "std": 0.1795,
+                  "min": 2.08,
+                  "25%": 2.1725,
+                  "50%": 2.335,
+                  "75%": 2.385,
+                  "max": 2.65
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reservoir_characterizer": {
+      "status": "success",
+      "agent": "reservoir_characterizer",
+      "agent_name": "ReservoirCharacterizer",
+      "description": "Characterizes reservoir properties",
+      "tool_results": {
+        "estimate_permeability": {
+          "estimated_permeability_md": 141554.57557172974,
+          "permeability_class": "High",
+          "basis": "Porosity-based estimation",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "analyze_saturation": {
+          "water_saturation": 0.5564443207901509,
+          "hydrocarbon_saturation": 0.44355567920984906,
+          "saturation_confidence": 0.75,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "predict_pressure": {
+          "predicted_pressure_psi": 1092.75,
+          "normal_pressure_gradient": 0.465,
+          "abnormal_pressure": false,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "estimate_permeability": {
+            "estimated_permeability_md": 141554.57557172974,
+            "permeability_class": "High",
+            "basis": "Porosity-based estimation",
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+              "rows": 8,
+              "columns": [
+                "depth_ft",
+                "gamma_ray_api",
+                "resistivity_ohm",
+                "porosity_percent",
+                "sonic_dt_us_ft",
+                "density_sg"
+              ],
+              "numeric_summary": {
+                "depth_ft": {
+                  "count": 8.0,
+                  "mean": 2350.0,
+                  "std": 244.949,
+                  "min": 2000.0,
+                  "25%": 2175.0,
+                  "50%": 2350.0,
+                  "75%": 2525.0,
+                  "max": 2700.0
+                },
+                "gamma_ray_api": {
+                  "count": 8.0,
+                  "mean": 92.5,
+                  "std": 16.5874,
+                  "min": 72.0,
+                  "25%": 83.25,
+                  "50%": 90.0,
+                  "75%": 97.5,
+                  "max": 125.0
+                },
+                "resistivity_ohm": {
+                  "count": 8.0,
+                  "mean": 79.7125,
+                  "std": 51.6115,
+                  "min": 28.5,
+                  "25%": 44.425,
+                  "50%": 50.35,
+                  "75%": 128.05,
+                  "max": 160.2
+                },
+                "porosity_percent": {
+                  "count": 8.0,
+                  "mean": 18.2125,
+                  "std": 6.7279,
+                  "min": 6.1,
+                  "25%": 15.4,
+                  "50%": 17.4,
+                  "75%": 22.625,
+                  "max": 28.1
+                },
+                "sonic_dt_us_ft": {
+                  "count": 8.0,
+                  "mean": 62.1625,
+                  "std": 5.0008,
+                  "min": 55.8,
+                  "25%": 58.975,
+                  "50%": 61.95,
+                  "75%": 63.675,
+                  "max": 72.4
+                },
+                "density_sg": {
+                  "count": 8.0,
+                  "mean": 2.3138,
+                  "std": 0.1795,
+                  "min": 2.08,
+                  "25%": 2.1725,
+                  "50%": 2.335,
+                  "75%": 2.385,
+                  "max": 2.65
+                }
+              }
+            }
+          },
+          "analyze_saturation": {
+            "water_saturation": 0.5564443207901509,
+            "hydrocarbon_saturation": 0.44355567920984906,
+            "saturation_confidence": 0.75,
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+              "rows": 8,
+              "columns": [
+                "depth_ft",
+                "gamma_ray_api",
+                "resistivity_ohm",
+                "porosity_percent",
+                "sonic_dt_us_ft",
+                "density_sg"
+              ],
+              "numeric_summary": {
+                "depth_ft": {
+                  "count": 8.0,
+                  "mean": 2350.0,
+                  "std": 244.949,
+                  "min": 2000.0,
+                  "25%": 2175.0,
+                  "50%": 2350.0,
+                  "75%": 2525.0,
+                  "max": 2700.0
+                },
+                "gamma_ray_api": {
+                  "count": 8.0,
+                  "mean": 92.5,
+                  "std": 16.5874,
+                  "min": 72.0,
+                  "25%": 83.25,
+                  "50%": 90.0,
+                  "75%": 97.5,
+                  "max": 125.0
+                },
+                "resistivity_ohm": {
+                  "count": 8.0,
+                  "mean": 79.7125,
+                  "std": 51.6115,
+                  "min": 28.5,
+                  "25%": 44.425,
+                  "50%": 50.35,
+                  "75%": 128.05,
+                  "max": 160.2
+                },
+                "porosity_percent": {
+                  "count": 8.0,
+                  "mean": 18.2125,
+                  "std": 6.7279,
+                  "min": 6.1,
+                  "25%": 15.4,
+                  "50%": 17.4,
+                  "75%": 22.625,
+                  "max": 28.1
+                },
+                "sonic_dt_us_ft": {
+                  "count": 8.0,
+                  "mean": 62.1625,
+                  "std": 5.0008,
+                  "min": 55.8,
+                  "25%": 58.975,
+                  "50%": 61.95,
+                  "75%": 63.675,
+                  "max": 72.4
+                },
+                "density_sg": {
+                  "count": 8.0,
+                  "mean": 2.3138,
+                  "std": 0.1795,
+                  "min": 2.08,
+                  "25%": 2.1725,
+                  "50%": 2.335,
+                  "75%": 2.385,
+                  "max": 2.65
+                }
+              }
+            }
+          },
+          "predict_pressure": {
+            "predicted_pressure_psi": 1092.75,
+            "normal_pressure_gradient": 0.465,
+            "abnormal_pressure": false,
+            "source_metadata": {
+              "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+              "rows": 8,
+              "columns": [
+                "depth_ft",
+                "gamma_ray_api",
+                "resistivity_ohm",
+                "porosity_percent",
+                "sonic_dt_us_ft",
+                "density_sg"
+              ],
+              "numeric_summary": {
+                "depth_ft": {
+                  "count": 8.0,
+                  "mean": 2350.0,
+                  "std": 244.949,
+                  "min": 2000.0,
+                  "25%": 2175.0,
+                  "50%": 2350.0,
+                  "75%": 2525.0,
+                  "max": 2700.0
+                },
+                "gamma_ray_api": {
+                  "count": 8.0,
+                  "mean": 92.5,
+                  "std": 16.5874,
+                  "min": 72.0,
+                  "25%": 83.25,
+                  "50%": 90.0,
+                  "75%": 97.5,
+                  "max": 125.0
+                },
+                "resistivity_ohm": {
+                  "count": 8.0,
+                  "mean": 79.7125,
+                  "std": 51.6115,
+                  "min": 28.5,
+                  "25%": 44.425,
+                  "50%": 50.35,
+                  "75%": 128.05,
+                  "max": 160.2
+                },
+                "porosity_percent": {
+                  "count": 8.0,
+                  "mean": 18.2125,
+                  "std": 6.7279,
+                  "min": 6.1,
+                  "25%": 15.4,
+                  "50%": 17.4,
+                  "75%": 22.625,
+                  "max": 28.1
+                },
+                "sonic_dt_us_ft": {
+                  "count": 8.0,
+                  "mean": 62.1625,
+                  "std": 5.0008,
+                  "min": 55.8,
+                  "25%": 58.975,
+                  "50%": 61.95,
+                  "75%": 63.675,
+                  "max": 72.4
+                },
+                "density_sg": {
+                  "count": 8.0,
+                  "mean": 2.3138,
+                  "std": 0.1795,
+                  "min": 2.08,
+                  "25%": 2.1725,
+                  "50%": 2.335,
+                  "75%": 2.385,
+                  "max": 2.65
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "exploration_risk_assessor": {
+      "status": "success",
+      "agent": "exploration_risk_assessor",
+      "agent_name": "ExplorationRiskAssessor",
+      "description": "Assesses exploration risks and opportunities",
+      "tool_results": {
+        "evaluate_trap": {
+          "trap_type": "structural",
+          "closure_area_sq_km": 12.0,
+          "trap_integrity": 0.85,
+          "spill_point_depth_m": 2400,
+          "risk_assessment": "Low to Moderate"
+        },
+        "calculate_volumes": {
+          "gross_rock_volume_mmbbl": 60.0,
+          "stock_tank_volume_mmbbl": 26.014753492383665,
+          "recovery_factor": 0.1,
+          "recoverable_reserves_mmbbl": 2.601475349238367,
+          "input_assumptions": {
+            "net_to_gross": 0.7,
+            "porosity_fraction": 0.18,
+            "hydrocarbon_saturation": 0.44355567920984906
+          }
+        },
+        "assess_seal_integrity": {
+          "seal_type": "Shale",
+          "seal_thickness_m": 200,
+          "seal_integrity_score": 0.9,
+          "leakage_risk": "Low",
+          "confidence": 0.85
+        }
+      },
+      "timestamp": "<redacted-for-snapshot>",
+      "result": {
+        "mode": "tool_only",
+        "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+        "tool_results": {
+          "evaluate_trap": {
+            "trap_type": "structural",
+            "closure_area_sq_km": 12.0,
+            "trap_integrity": 0.85,
+            "spill_point_depth_m": 2400,
+            "risk_assessment": "Low to Moderate"
+          },
+          "calculate_volumes": {
+            "gross_rock_volume_mmbbl": 60.0,
+            "stock_tank_volume_mmbbl": 26.014753492383665,
+            "recovery_factor": 0.1,
+            "recoverable_reserves_mmbbl": 2.601475349238367,
+            "input_assumptions": {
+              "net_to_gross": 0.7,
+              "porosity_fraction": 0.18,
+              "hydrocarbon_saturation": 0.44355567920984906
+            }
+          },
+          "assess_seal_integrity": {
+            "seal_type": "Shale",
+            "seal_thickness_m": 200,
+            "seal_integrity_score": 0.9,
+            "leakage_risk": "Low",
+            "confidence": 0.85
+          }
+        }
+      }
+    }
+  },
+  "seismic_analysis": {
+    "status": "success",
+    "agent": "seismic_analyzer",
+    "agent_name": "SeismicAnalyzer",
+    "description": "Analyzes seismic data for subsurface structures",
+    "tool_results": {
+      "analyze_seismic_amplitude": {
+        "mean_amplitude": 1.7889999999999997,
+        "std_amplitude": 0.8233765845589732,
+        "max_amplitude": 3.21,
+        "bright_spot_count": 0,
+        "anomaly_ratio": 0.0,
+        "interpretation": "No significant anomalies",
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+          "rows": 10,
+          "columns": [
+            "seismic_line",
+            "depth_m",
+            "amplitude",
+            "frequency_hz",
+            "phase_quality"
+          ],
+          "numeric_summary": {
+            "depth_m": {
+              "count": 10.0,
+              "mean": 1450.0,
+              "std": 302.765,
+              "min": 1000.0,
+              "25%": 1225.0,
+              "50%": 1450.0,
+              "75%": 1675.0,
+              "max": 1900.0
+            },
+            "amplitude": {
+              "count": 10.0,
+              "mean": 1.789,
+              "std": 0.8679,
+              "min": 0.45,
+              "25%": 1.3025,
+              "50%": 1.77,
+              "75%": 2.2825,
+              "max": 3.21
+            },
+            "frequency_hz": {
+              "count": 10.0,
+              "mean": 20.28,
+              "std": 2.9999,
+              "min": 15.5,
+              "25%": 18.6,
+              "50%": 20.2,
+              "75%": 21.875,
+              "max": 25.4
+            },
+            "phase_quality": {
+              "count": 10.0,
+              "mean": 0.874,
+              "std": 0.032,
+              "min": 0.82,
+              "25%": 0.8525,
+              "50%": 0.875,
+              "75%": 0.8975,
+              "max": 0.92
+            }
+          }
+        }
+      },
+      "detect_faults": {
+        "fault_count": 0,
+        "fault_depths": [],
+        "fault_severity": 0.7825600894354389,
+        "risk_level": "LOW",
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+          "rows": 10,
+          "columns": [
+            "seismic_line",
+            "depth_m",
+            "amplitude",
+            "frequency_hz",
+            "phase_quality"
+          ],
+          "numeric_summary": {
+            "depth_m": {
+              "count": 10.0,
+              "mean": 1450.0,
+              "std": 302.765,
+              "min": 1000.0,
+              "25%": 1225.0,
+              "50%": 1450.0,
+              "75%": 1675.0,
+              "max": 1900.0
+            },
+            "amplitude": {
+              "count": 10.0,
+              "mean": 1.789,
+              "std": 0.8679,
+              "min": 0.45,
+              "25%": 1.3025,
+              "50%": 1.77,
+              "75%": 2.2825,
+              "max": 3.21
+            },
+            "frequency_hz": {
+              "count": 10.0,
+              "mean": 20.28,
+              "std": 2.9999,
+              "min": 15.5,
+              "25%": 18.6,
+              "50%": 20.2,
+              "75%": 21.875,
+              "max": 25.4
+            },
+            "phase_quality": {
+              "count": 10.0,
+              "mean": 0.874,
+              "std": 0.032,
+              "min": 0.82,
+              "25%": 0.8525,
+              "50%": 0.875,
+              "75%": 0.8975,
+              "max": 0.92
+            }
+          }
+        }
+      },
+      "pick_horizons": {
+        "horizons_picked": 3,
+        "top_horizons": [
+          {
+            "depth": 1400.0,
+            "amplitude": 3.21
+          },
+          {
+            "depth": 1200.0,
+            "amplitude": 2.34
+          },
+          {
+            "depth": 1800.0,
+            "amplitude": 2.11
+          }
+        ],
+        "coverage": 30.0,
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+          "rows": 10,
+          "columns": [
+            "seismic_line",
+            "depth_m",
+            "amplitude",
+            "frequency_hz",
+            "phase_quality"
+          ],
+          "numeric_summary": {
+            "depth_m": {
+              "count": 10.0,
+              "mean": 1450.0,
+              "std": 302.765,
+              "min": 1000.0,
+              "25%": 1225.0,
+              "50%": 1450.0,
+              "75%": 1675.0,
+              "max": 1900.0
+            },
+            "amplitude": {
+              "count": 10.0,
+              "mean": 1.789,
+              "std": 0.8679,
+              "min": 0.45,
+              "25%": 1.3025,
+              "50%": 1.77,
+              "75%": 2.2825,
+              "max": 3.21
+            },
+            "frequency_hz": {
+              "count": 10.0,
+              "mean": 20.28,
+              "std": 2.9999,
+              "min": 15.5,
+              "25%": 18.6,
+              "50%": 20.2,
+              "75%": 21.875,
+              "max": 25.4
+            },
+            "phase_quality": {
+              "count": 10.0,
+              "mean": 0.874,
+              "std": 0.032,
+              "min": 0.82,
+              "25%": 0.8525,
+              "50%": 0.875,
+              "75%": 0.8975,
+              "max": 0.92
+            }
+          }
+        }
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "analyze_seismic_amplitude": {
+          "mean_amplitude": 1.7889999999999997,
+          "std_amplitude": 0.8233765845589732,
+          "max_amplitude": 3.21,
+          "bright_spot_count": 0,
+          "anomaly_ratio": 0.0,
+          "interpretation": "No significant anomalies",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          }
+        },
+        "detect_faults": {
+          "fault_count": 0,
+          "fault_depths": [],
+          "fault_severity": 0.7825600894354389,
+          "risk_level": "LOW",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          }
+        },
+        "pick_horizons": {
+          "horizons_picked": 3,
+          "top_horizons": [
+            {
+              "depth": 1400.0,
+              "amplitude": 3.21
+            },
+            {
+              "depth": 1200.0,
+              "amplitude": 2.34
+            },
+            {
+              "depth": 1800.0,
+              "amplitude": 2.11
+            }
+          ],
+          "coverage": 30.0,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_seismic.csv",
+            "rows": 10,
+            "columns": [
+              "seismic_line",
+              "depth_m",
+              "amplitude",
+              "frequency_hz",
+              "phase_quality"
+            ],
+            "numeric_summary": {
+              "depth_m": {
+                "count": 10.0,
+                "mean": 1450.0,
+                "std": 302.765,
+                "min": 1000.0,
+                "25%": 1225.0,
+                "50%": 1450.0,
+                "75%": 1675.0,
+                "max": 1900.0
+              },
+              "amplitude": {
+                "count": 10.0,
+                "mean": 1.789,
+                "std": 0.8679,
+                "min": 0.45,
+                "25%": 1.3025,
+                "50%": 1.77,
+                "75%": 2.2825,
+                "max": 3.21
+              },
+              "frequency_hz": {
+                "count": 10.0,
+                "mean": 20.28,
+                "std": 2.9999,
+                "min": 15.5,
+                "25%": 18.6,
+                "50%": 20.2,
+                "75%": 21.875,
+                "max": 25.4
+              },
+              "phase_quality": {
+                "count": 10.0,
+                "mean": 0.874,
+                "std": 0.032,
+                "min": 0.82,
+                "25%": 0.8525,
+                "50%": 0.875,
+                "75%": 0.8975,
+                "max": 0.92
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "well_log_analysis": {
+    "status": "success",
+    "agent": "well_log_interpreter",
+    "agent_name": "WellLogInterpreter",
+    "description": "Interprets well log data for lithology and fluids",
+    "tool_results": {
+      "classify_lithology": {
+        "primary_lithology": "Mixed lithology",
+        "gamma_ray_avg": 92.5,
+        "resistivity_avg": 79.7125,
+        "quality_score": 0.8833333333333333,
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+          "rows": 8,
+          "columns": [
+            "depth_ft",
+            "gamma_ray_api",
+            "resistivity_ohm",
+            "porosity_percent",
+            "sonic_dt_us_ft",
+            "density_sg"
+          ],
+          "numeric_summary": {
+            "depth_ft": {
+              "count": 8.0,
+              "mean": 2350.0,
+              "std": 244.949,
+              "min": 2000.0,
+              "25%": 2175.0,
+              "50%": 2350.0,
+              "75%": 2525.0,
+              "max": 2700.0
+            },
+            "gamma_ray_api": {
+              "count": 8.0,
+              "mean": 92.5,
+              "std": 16.5874,
+              "min": 72.0,
+              "25%": 83.25,
+              "50%": 90.0,
+              "75%": 97.5,
+              "max": 125.0
+            },
+            "resistivity_ohm": {
+              "count": 8.0,
+              "mean": 79.7125,
+              "std": 51.6115,
+              "min": 28.5,
+              "25%": 44.425,
+              "50%": 50.35,
+              "75%": 128.05,
+              "max": 160.2
+            },
+            "porosity_percent": {
+              "count": 8.0,
+              "mean": 18.2125,
+              "std": 6.7279,
+              "min": 6.1,
+              "25%": 15.4,
+              "50%": 17.4,
+              "75%": 22.625,
+              "max": 28.1
+            },
+            "sonic_dt_us_ft": {
+              "count": 8.0,
+              "mean": 62.1625,
+              "std": 5.0008,
+              "min": 55.8,
+              "25%": 58.975,
+              "50%": 61.95,
+              "75%": 63.675,
+              "max": 72.4
+            },
+            "density_sg": {
+              "count": 8.0,
+              "mean": 2.3138,
+              "std": 0.1795,
+              "min": 2.08,
+              "25%": 2.1725,
+              "50%": 2.335,
+              "75%": 2.385,
+              "max": 2.65
+            }
+          }
+        }
+      },
+      "identify_fluids": {
+        "primary_fluid": "Gas bearing",
+        "confidence": 0.7,
+        "resistivity_avg": 79.7125,
+        "porosity_avg": 18.212500000000002,
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+          "rows": 8,
+          "columns": [
+            "depth_ft",
+            "gamma_ray_api",
+            "resistivity_ohm",
+            "porosity_percent",
+            "sonic_dt_us_ft",
+            "density_sg"
+          ],
+          "numeric_summary": {
+            "depth_ft": {
+              "count": 8.0,
+              "mean": 2350.0,
+              "std": 244.949,
+              "min": 2000.0,
+              "25%": 2175.0,
+              "50%": 2350.0,
+              "75%": 2525.0,
+              "max": 2700.0
+            },
+            "gamma_ray_api": {
+              "count": 8.0,
+              "mean": 92.5,
+              "std": 16.5874,
+              "min": 72.0,
+              "25%": 83.25,
+              "50%": 90.0,
+              "75%": 97.5,
+              "max": 125.0
+            },
+            "resistivity_ohm": {
+              "count": 8.0,
+              "mean": 79.7125,
+              "std": 51.6115,
+              "min": 28.5,
+              "25%": 44.425,
+              "50%": 50.35,
+              "75%": 128.05,
+              "max": 160.2
+            },
+            "porosity_percent": {
+              "count": 8.0,
+              "mean": 18.2125,
+              "std": 6.7279,
+              "min": 6.1,
+              "25%": 15.4,
+              "50%": 17.4,
+              "75%": 22.625,
+              "max": 28.1
+            },
+            "sonic_dt_us_ft": {
+              "count": 8.0,
+              "mean": 62.1625,
+              "std": 5.0008,
+              "min": 55.8,
+              "25%": 58.975,
+              "50%": 61.95,
+              "75%": 63.675,
+              "max": 72.4
+            },
+            "density_sg": {
+              "count": 8.0,
+              "mean": 2.3138,
+              "std": 0.1795,
+              "min": 2.08,
+              "25%": 2.1725,
+              "50%": 2.335,
+              "75%": 2.385,
+              "max": 2.65
+            }
+          }
+        }
+      },
+      "estimate_porosity": {
+        "average_porosity": 18.212500000000002,
+        "max_porosity": 28.1,
+        "min_porosity": 6.1,
+        "porosity_quality": "Good",
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+          "rows": 8,
+          "columns": [
+            "depth_ft",
+            "gamma_ray_api",
+            "resistivity_ohm",
+            "porosity_percent",
+            "sonic_dt_us_ft",
+            "density_sg"
+          ],
+          "numeric_summary": {
+            "depth_ft": {
+              "count": 8.0,
+              "mean": 2350.0,
+              "std": 244.949,
+              "min": 2000.0,
+              "25%": 2175.0,
+              "50%": 2350.0,
+              "75%": 2525.0,
+              "max": 2700.0
+            },
+            "gamma_ray_api": {
+              "count": 8.0,
+              "mean": 92.5,
+              "std": 16.5874,
+              "min": 72.0,
+              "25%": 83.25,
+              "50%": 90.0,
+              "75%": 97.5,
+              "max": 125.0
+            },
+            "resistivity_ohm": {
+              "count": 8.0,
+              "mean": 79.7125,
+              "std": 51.6115,
+              "min": 28.5,
+              "25%": 44.425,
+              "50%": 50.35,
+              "75%": 128.05,
+              "max": 160.2
+            },
+            "porosity_percent": {
+              "count": 8.0,
+              "mean": 18.2125,
+              "std": 6.7279,
+              "min": 6.1,
+              "25%": 15.4,
+              "50%": 17.4,
+              "75%": 22.625,
+              "max": 28.1
+            },
+            "sonic_dt_us_ft": {
+              "count": 8.0,
+              "mean": 62.1625,
+              "std": 5.0008,
+              "min": 55.8,
+              "25%": 58.975,
+              "50%": 61.95,
+              "75%": 63.675,
+              "max": 72.4
+            },
+            "density_sg": {
+              "count": 8.0,
+              "mean": 2.3138,
+              "std": 0.1795,
+              "min": 2.08,
+              "25%": 2.1725,
+              "50%": 2.335,
+              "75%": 2.385,
+              "max": 2.65
+            }
+          }
+        }
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "classify_lithology": {
+          "primary_lithology": "Mixed lithology",
+          "gamma_ray_avg": 92.5,
+          "resistivity_avg": 79.7125,
+          "quality_score": 0.8833333333333333,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "identify_fluids": {
+          "primary_fluid": "Gas bearing",
+          "confidence": 0.7,
+          "resistivity_avg": 79.7125,
+          "porosity_avg": 18.212500000000002,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "estimate_porosity": {
+          "average_porosity": 18.212500000000002,
+          "max_porosity": 28.1,
+          "min_porosity": 6.1,
+          "porosity_quality": "Good",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "reservoir_analysis": {
+    "status": "success",
+    "agent": "reservoir_characterizer",
+    "agent_name": "ReservoirCharacterizer",
+    "description": "Characterizes reservoir properties",
+    "tool_results": {
+      "estimate_permeability": {
+        "estimated_permeability_md": 141554.57557172974,
+        "permeability_class": "High",
+        "basis": "Porosity-based estimation",
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+          "rows": 8,
+          "columns": [
+            "depth_ft",
+            "gamma_ray_api",
+            "resistivity_ohm",
+            "porosity_percent",
+            "sonic_dt_us_ft",
+            "density_sg"
+          ],
+          "numeric_summary": {
+            "depth_ft": {
+              "count": 8.0,
+              "mean": 2350.0,
+              "std": 244.949,
+              "min": 2000.0,
+              "25%": 2175.0,
+              "50%": 2350.0,
+              "75%": 2525.0,
+              "max": 2700.0
+            },
+            "gamma_ray_api": {
+              "count": 8.0,
+              "mean": 92.5,
+              "std": 16.5874,
+              "min": 72.0,
+              "25%": 83.25,
+              "50%": 90.0,
+              "75%": 97.5,
+              "max": 125.0
+            },
+            "resistivity_ohm": {
+              "count": 8.0,
+              "mean": 79.7125,
+              "std": 51.6115,
+              "min": 28.5,
+              "25%": 44.425,
+              "50%": 50.35,
+              "75%": 128.05,
+              "max": 160.2
+            },
+            "porosity_percent": {
+              "count": 8.0,
+              "mean": 18.2125,
+              "std": 6.7279,
+              "min": 6.1,
+              "25%": 15.4,
+              "50%": 17.4,
+              "75%": 22.625,
+              "max": 28.1
+            },
+            "sonic_dt_us_ft": {
+              "count": 8.0,
+              "mean": 62.1625,
+              "std": 5.0008,
+              "min": 55.8,
+              "25%": 58.975,
+              "50%": 61.95,
+              "75%": 63.675,
+              "max": 72.4
+            },
+            "density_sg": {
+              "count": 8.0,
+              "mean": 2.3138,
+              "std": 0.1795,
+              "min": 2.08,
+              "25%": 2.1725,
+              "50%": 2.335,
+              "75%": 2.385,
+              "max": 2.65
+            }
+          }
+        }
+      },
+      "analyze_saturation": {
+        "water_saturation": 0.5564443207901509,
+        "hydrocarbon_saturation": 0.44355567920984906,
+        "saturation_confidence": 0.75,
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+          "rows": 8,
+          "columns": [
+            "depth_ft",
+            "gamma_ray_api",
+            "resistivity_ohm",
+            "porosity_percent",
+            "sonic_dt_us_ft",
+            "density_sg"
+          ],
+          "numeric_summary": {
+            "depth_ft": {
+              "count": 8.0,
+              "mean": 2350.0,
+              "std": 244.949,
+              "min": 2000.0,
+              "25%": 2175.0,
+              "50%": 2350.0,
+              "75%": 2525.0,
+              "max": 2700.0
+            },
+            "gamma_ray_api": {
+              "count": 8.0,
+              "mean": 92.5,
+              "std": 16.5874,
+              "min": 72.0,
+              "25%": 83.25,
+              "50%": 90.0,
+              "75%": 97.5,
+              "max": 125.0
+            },
+            "resistivity_ohm": {
+              "count": 8.0,
+              "mean": 79.7125,
+              "std": 51.6115,
+              "min": 28.5,
+              "25%": 44.425,
+              "50%": 50.35,
+              "75%": 128.05,
+              "max": 160.2
+            },
+            "porosity_percent": {
+              "count": 8.0,
+              "mean": 18.2125,
+              "std": 6.7279,
+              "min": 6.1,
+              "25%": 15.4,
+              "50%": 17.4,
+              "75%": 22.625,
+              "max": 28.1
+            },
+            "sonic_dt_us_ft": {
+              "count": 8.0,
+              "mean": 62.1625,
+              "std": 5.0008,
+              "min": 55.8,
+              "25%": 58.975,
+              "50%": 61.95,
+              "75%": 63.675,
+              "max": 72.4
+            },
+            "density_sg": {
+              "count": 8.0,
+              "mean": 2.3138,
+              "std": 0.1795,
+              "min": 2.08,
+              "25%": 2.1725,
+              "50%": 2.335,
+              "75%": 2.385,
+              "max": 2.65
+            }
+          }
+        }
+      },
+      "predict_pressure": {
+        "predicted_pressure_psi": 1092.75,
+        "normal_pressure_gradient": 0.465,
+        "abnormal_pressure": false,
+        "source_metadata": {
+          "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+          "rows": 8,
+          "columns": [
+            "depth_ft",
+            "gamma_ray_api",
+            "resistivity_ohm",
+            "porosity_percent",
+            "sonic_dt_us_ft",
+            "density_sg"
+          ],
+          "numeric_summary": {
+            "depth_ft": {
+              "count": 8.0,
+              "mean": 2350.0,
+              "std": 244.949,
+              "min": 2000.0,
+              "25%": 2175.0,
+              "50%": 2350.0,
+              "75%": 2525.0,
+              "max": 2700.0
+            },
+            "gamma_ray_api": {
+              "count": 8.0,
+              "mean": 92.5,
+              "std": 16.5874,
+              "min": 72.0,
+              "25%": 83.25,
+              "50%": 90.0,
+              "75%": 97.5,
+              "max": 125.0
+            },
+            "resistivity_ohm": {
+              "count": 8.0,
+              "mean": 79.7125,
+              "std": 51.6115,
+              "min": 28.5,
+              "25%": 44.425,
+              "50%": 50.35,
+              "75%": 128.05,
+              "max": 160.2
+            },
+            "porosity_percent": {
+              "count": 8.0,
+              "mean": 18.2125,
+              "std": 6.7279,
+              "min": 6.1,
+              "25%": 15.4,
+              "50%": 17.4,
+              "75%": 22.625,
+              "max": 28.1
+            },
+            "sonic_dt_us_ft": {
+              "count": 8.0,
+              "mean": 62.1625,
+              "std": 5.0008,
+              "min": 55.8,
+              "25%": 58.975,
+              "50%": 61.95,
+              "75%": 63.675,
+              "max": 72.4
+            },
+            "density_sg": {
+              "count": 8.0,
+              "mean": 2.3138,
+              "std": 0.1795,
+              "min": 2.08,
+              "25%": 2.1725,
+              "50%": 2.335,
+              "75%": 2.385,
+              "max": 2.65
+            }
+          }
+        }
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "estimate_permeability": {
+          "estimated_permeability_md": 141554.57557172974,
+          "permeability_class": "High",
+          "basis": "Porosity-based estimation",
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "analyze_saturation": {
+          "water_saturation": 0.5564443207901509,
+          "hydrocarbon_saturation": 0.44355567920984906,
+          "saturation_confidence": 0.75,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        },
+        "predict_pressure": {
+          "predicted_pressure_psi": 1092.75,
+          "normal_pressure_gradient": 0.465,
+          "abnormal_pressure": false,
+          "source_metadata": {
+            "source_path": "/Users/mperiyasamy/work/OilandGasAnalytics/data/sample_welllog.csv",
+            "rows": 8,
+            "columns": [
+              "depth_ft",
+              "gamma_ray_api",
+              "resistivity_ohm",
+              "porosity_percent",
+              "sonic_dt_us_ft",
+              "density_sg"
+            ],
+            "numeric_summary": {
+              "depth_ft": {
+                "count": 8.0,
+                "mean": 2350.0,
+                "std": 244.949,
+                "min": 2000.0,
+                "25%": 2175.0,
+                "50%": 2350.0,
+                "75%": 2525.0,
+                "max": 2700.0
+              },
+              "gamma_ray_api": {
+                "count": 8.0,
+                "mean": 92.5,
+                "std": 16.5874,
+                "min": 72.0,
+                "25%": 83.25,
+                "50%": 90.0,
+                "75%": 97.5,
+                "max": 125.0
+              },
+              "resistivity_ohm": {
+                "count": 8.0,
+                "mean": 79.7125,
+                "std": 51.6115,
+                "min": 28.5,
+                "25%": 44.425,
+                "50%": 50.35,
+                "75%": 128.05,
+                "max": 160.2
+              },
+              "porosity_percent": {
+                "count": 8.0,
+                "mean": 18.2125,
+                "std": 6.7279,
+                "min": 6.1,
+                "25%": 15.4,
+                "50%": 17.4,
+                "75%": 22.625,
+                "max": 28.1
+              },
+              "sonic_dt_us_ft": {
+                "count": 8.0,
+                "mean": 62.1625,
+                "std": 5.0008,
+                "min": 55.8,
+                "25%": 58.975,
+                "50%": 61.95,
+                "75%": 63.675,
+                "max": 72.4
+              },
+              "density_sg": {
+                "count": 8.0,
+                "mean": 2.3138,
+                "std": 0.1795,
+                "min": 2.08,
+                "25%": 2.1725,
+                "50%": 2.335,
+                "75%": 2.385,
+                "max": 2.65
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "risk_assessment": {
+    "status": "success",
+    "agent": "exploration_risk_assessor",
+    "agent_name": "ExplorationRiskAssessor",
+    "description": "Assesses exploration risks and opportunities",
+    "tool_results": {
+      "evaluate_trap": {
+        "trap_type": "structural",
+        "closure_area_sq_km": 12.0,
+        "trap_integrity": 0.85,
+        "spill_point_depth_m": 2400,
+        "risk_assessment": "Low to Moderate"
+      },
+      "calculate_volumes": {
+        "gross_rock_volume_mmbbl": 60.0,
+        "stock_tank_volume_mmbbl": 26.014753492383665,
+        "recovery_factor": 0.1,
+        "recoverable_reserves_mmbbl": 2.601475349238367,
+        "input_assumptions": {
+          "net_to_gross": 0.7,
+          "porosity_fraction": 0.18,
+          "hydrocarbon_saturation": 0.44355567920984906
+        }
+      },
+      "assess_seal_integrity": {
+        "seal_type": "Shale",
+        "seal_thickness_m": 200,
+        "seal_integrity_score": 0.9,
+        "leakage_risk": "Low",
+        "confidence": 0.85
+      }
+    },
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "tool_only",
+      "summary": "LLM synthesis skipped: OPENAI_API_KEY is not configured (or SAMPLE_MODE is enabled, or the openai package is missing).",
+      "tool_results": {
+        "evaluate_trap": {
+          "trap_type": "structural",
+          "closure_area_sq_km": 12.0,
+          "trap_integrity": 0.85,
+          "spill_point_depth_m": 2400,
+          "risk_assessment": "Low to Moderate"
+        },
+        "calculate_volumes": {
+          "gross_rock_volume_mmbbl": 60.0,
+          "stock_tank_volume_mmbbl": 26.014753492383665,
+          "recovery_factor": 0.1,
+          "recoverable_reserves_mmbbl": 2.601475349238367,
+          "input_assumptions": {
+            "net_to_gross": 0.7,
+            "porosity_fraction": 0.18,
+            "hydrocarbon_saturation": 0.44355567920984906
+          }
+        },
+        "assess_seal_integrity": {
+          "seal_type": "Shale",
+          "seal_thickness_m": 200,
+          "seal_integrity_score": 0.9,
+          "leakage_risk": "Low",
+          "confidence": 0.85
+        }
+      }
+    }
+  },
+  "final_report": {
+    "status": "blocked",
+    "agent": "report_generator",
+    "agent_name": "ReportGenerator",
+    "description": "Generates comprehensive analysis reports",
+    "tool_results": {},
+    "timestamp": "<redacted-for-snapshot>",
+    "result": {
+      "mode": "blocked_by_evaluator",
+      "summary": "Report writer was blocked by the evaluator because the quality threshold was not met.",
+      "blocking_reasons": [
+        "quality_score=0.475<0.5"
+      ],
+      "quality_score": 0.475,
+      "quality_threshold": 0.5
+    }
+  },
+  "escalation": {
+    "llm_failure_streak": 0,
+    "escalated_to_sample_mode": false
+  },
+  "messages": "<redacted-for-snapshot>",
+  "open_data_recommendations": [
+    {
+      "name": "SEAM Time Lapse Pilot Sample",
+      "url": "https://seg.org/seam/open-data/",
+      "size": "16.3 MB",
+      "formats": [
+        "SEG-Y",
+        "PDF documentation"
+      ],
+      "use_case": "Small open seismic sample suitable for workflow testing."
+    },
+    {
+      "name": "SEAM Phase I Interpretation Challenge",
+      "url": "https://seg.org/seam/open-data/",
+      "size": "3 GB per depth/time challenge package",
+      "formats": [
+        "SEG-Y",
+        "interpretation challenge data"
+      ],
+      "use_case": "Large seismic interpretation benchmark when local storage allows."
+    },
+    {
+      "name": "SEAM Phase I Elastic Earth Model Subset 2D",
+      "url": "https://seg.org/seam/open-data/",
+      "size": "600 KB",
+      "formats": [
+        "SEG-Y"
+      ],
+      "use_case": "Tiny synthetic earth-model subset for smoke tests and demos."
+    },
+    {
+      "name": "SEG Open Data Wiki Catalog",
+      "url": "https://wiki.seg.org/wiki/Open_data",
+      "size": "varies; many seismic/well-log packages are hundreds of MB or larger",
+      "formats": [
+        "SEG-Y",
+        "well logs",
+        "velocity models",
+        "documentation"
+      ],
+      "use_case": "Browse candidate real-world public seismic and well-log datasets."
+    }
+  ]
+}
