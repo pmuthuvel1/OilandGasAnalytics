@@ -387,6 +387,190 @@ def format_recommendations(analyses: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------------
+# PETROPHYSICS CO-PILOT TOOLS (Option A: real-physics, LAS-driven)
+# ---------------------------------------------------------------------------
+def load_well_log(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Load a LAS or CSV well-log file and return curve inventory + metadata."""
+    try:
+        path = data.get("path") or data.get("file_path") or data.get("well_file")
+        if not path:
+            return {"error": "Missing 'path' (LAS or CSV file path)"}
+        las = petro.load_las_file(path)
+        # Cache full LAS dict for downstream tools through a side channel.
+        _LAS_CACHE[path] = las
+        return {
+            "well": las["well"],
+            "field": las["field"],
+            "depth_unit": las["depth_unit"],
+            "depth_range": las["depth_range"],
+            "n_samples": las["n_samples"],
+            "curves_found": list(las["curves"].keys()),
+            "curve_mapping": las["curve_mapping"],
+            "raw_columns": las["raw_columns"],
+            "source_path": las["source_path"],
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def compute_petrophysics(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Run Larionov Vsh, density-neutron porosity, Archie Sw, pay-zone detection."""
+    try:
+        path = data.get("path") or data.get("file_path") or data.get("well_file")
+        las = _LAS_CACHE.get(path) if path else None
+        if las is None and path:
+            las = petro.load_las_file(path)
+            _LAS_CACHE[path] = las
+        if las is None:
+            return {"error": "Provide 'path' to a LAS/CSV file (call load_well_log first)."}
+
+        params = {
+            "matrix_density": float(data.get("matrix_density", 2.65)),
+            "fluid_density": float(data.get("fluid_density", 1.0)),
+            "Rw": float(data.get("Rw", 0.03)),
+            "a": float(data.get("a", 1.0)),
+            "m": float(data.get("m", 2.0)),
+            "n": float(data.get("n", 2.0)),
+            "rock_age": str(data.get("rock_age", "tertiary")),
+            "vsh_max": float(data.get("vsh_max", 0.40)),
+            "phi_min": float(data.get("phi_min", 0.10)),
+            "sw_max": float(data.get("sw_max", 0.50)),
+            "min_thickness": float(data.get("min_thickness", 1.5)),
+        }
+        result = petro.run_full_petrophysics(las, **params)
+        # Cache arrays for plotting tool, but strip from LLM-visible result.
+        if "_arrays" in result:
+            _ARRAY_CACHE[path] = result.pop("_arrays")
+        result["parameters"] = params
+        result["source_path"] = path
+        return result
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def plot_well_logs(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Render a 3-track log plot (GR / RHOB-NPHI / RT) with pay zones shaded."""
+    try:
+        path = data.get("path") or data.get("file_path") or data.get("well_file")
+        arrays = _ARRAY_CACHE.get(path)
+        if arrays is None:
+            # Recompute if cache empty.
+            las = _LAS_CACHE.get(path) or petro.load_las_file(path)
+            _LAS_CACHE[path] = las
+            full = petro.run_full_petrophysics(las)
+            arrays = full.get("_arrays", {})
+            _ARRAY_CACHE[path] = arrays
+        pay_zones = data.get("pay_zones") or []
+        depth_window = data.get("depth_window")
+        if depth_window and len(depth_window) == 2:
+            depth_window = (float(depth_window[0]), float(depth_window[1]))
+        else:
+            depth_window = None
+        well_name = data.get("well_name") or (_LAS_CACHE.get(path, {}).get("well") or "Well")
+        return petro.plot_log_tracks(
+            depth=arrays.get("depth", []),
+            gr=arrays.get("GR"),
+            rhob=arrays.get("RHOB"),
+            nphi=arrays.get("NPHI"),
+            rt=arrays.get("RT"),
+            pay_zones=pay_zones,
+            well_name=well_name,
+            depth_window=depth_window,
+        )
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def summarize_pay_zones(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Build an executive summary from the petrophysics result + pay zones."""
+    try:
+        petro_result = data.get("petrophysics") or {}
+        pay = petro_result.get("pay", {})
+        zones = pay.get("zones", [])
+        if not zones:
+            return {
+                "well": petro_result.get("well"),
+                "verdict": "NO_PAY",
+                "summary": "No intervals met the pay cutoffs. Consider relaxing cutoffs or reviewing data quality.",
+                "net_pay": 0.0,
+                "net_to_gross": 0.0,
+                "zones": [],
+            }
+        best = max(zones, key=lambda z: z["thickness"] * z["avg_phi"] * (1 - z["avg_sw"]))
+        return {
+            "well": petro_result.get("well"),
+            "verdict": "PAY_FOUND",
+            "n_zones": len(zones),
+            "net_pay": pay.get("net_pay"),
+            "gross_interval": pay.get("gross_interval"),
+            "net_to_gross": pay.get("net_to_gross"),
+            "best_zone": best,
+            "all_zones": zones,
+            "cutoffs": pay.get("cutoffs"),
+            "warnings": petro_result.get("warnings", []),
+            "recommendation": _zone_recommendation(best),
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def _zone_recommendation(zone: Dict[str, Any]) -> str:
+    phi = zone.get("avg_phi", 0)
+    sw = zone.get("avg_sw", 1)
+    thk = zone.get("thickness", 0)
+    if phi > 0.18 and sw < 0.35 and thk > 4:
+        return ("Strong completion candidate. Perforate "
+                f"{zone['top']:.1f}-{zone['base']:.1f} and run formation pressure test.")
+    if phi > 0.12 and sw < 0.5 and thk > 2:
+        return ("Moderate-quality pay. Consider commingling with adjacent zones.")
+    return "Marginal pay; further data acquisition (core, fluid sample) recommended."
+
+
+def critique_petrophysics(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Deterministic QC checks for the petrophysics result — feeds the evaluator agent."""
+    try:
+        petro_result = data.get("petrophysics") or {}
+        issues: List[str] = []
+        warnings: List[str] = list(petro_result.get("warnings", []))
+
+        vsh = petro_result.get("vshale", {})
+        if vsh.get("gr_clean_api", 0) >= vsh.get("gr_shale_api", 0):
+            issues.append("Vsh baseline collapse: GR clean >= GR shale.")
+
+        phi = petro_result.get("porosity", {}).get("mean_phi", 0)
+        if phi <= 0 or phi > 0.45:
+            issues.append(f"Implausible mean porosity ({phi:.3f}); check matrix density.")
+
+        sw = petro_result.get("water_saturation", {}).get("mean_sw")
+        if sw is not None and (sw < 0.05 or sw > 1.01):
+            issues.append(f"Sw out of physical range ({sw:.3f}); verify Rw/a/m/n.")
+
+        curves = petro_result.get("curves_used", [])
+        for required in ("GR", "RHOB"):
+            if required not in curves:
+                issues.append(f"Missing required curve: {required}.")
+        if "RT" not in curves:
+            warnings.append("RT absent — Sw not computed.")
+        if "NPHI" not in curves:
+            warnings.append("NPHI absent — porosity from density only.")
+
+        confidence = max(0.0, 1.0 - 0.2 * len(issues) - 0.05 * len(warnings))
+        return {
+            "approved": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings,
+            "confidence": round(confidence, 2),
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+# In-process caches keyed by file path. Keeps heavy arrays out of LLM prompts.
+_LAS_CACHE: Dict[str, Dict[str, Any]] = {}
+_ARRAY_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
 # Tool registry
 TOOLS = {
     "analyze_seismic_amplitude": analyze_seismic_amplitude,
