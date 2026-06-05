@@ -1,0 +1,12 @@
+{
+  "well_name": "CSV-Driven-Demo-009",
+  "analysis_type": "full",
+  "trap_type": "structural",
+  "closure_area": 12.0,
+  "spill_depth": 2400,
+  "grv": 60.0,
+  "quality_threshold": 0.5,
+  "seismic_csv_path": "sample_seismic.csv",
+  "well_log_csv_path": "sample_welllog.csv",
+  "user_notes": "Loads seismic + well-log CSV bundled in data/. Demonstrates the ResearchAgent's local CSV ingestion path; no inline arrays needed."
+}
