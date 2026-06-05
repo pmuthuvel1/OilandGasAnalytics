@@ -98,11 +98,18 @@ class Config:
         )
 
         # LLM / OpenAI-compatible provider — STRICTLY env-driven, never
-        # hard-coded in source. ``OPENAI_BASE_URL`` falls back to
-        # ``DEFAULT_OPENAI_BASE_URL`` (Core42 / Compass) when the env var
-        # is missing; the chosen value is logged at startup so operators
-        # can confirm the active gateway.
-        self.OPENAI_API_KEY: str = _env_str("OPENAI_API_KEY")
+        # hard-coded in source. ``OPENAI_API_KEY`` is read only from the
+        # process environment (or a local ``.env`` for dev convenience).
+        # ``OPENAI_BASE_URL`` falls back to ``DEFAULT_OPENAI_BASE_URL``
+        # (Core42 / Compass at https://api.core42.ai/v1) when the env
+        # var is missing. Both values, along with their source ("env" vs
+        # "default-fallback" / "missing"), are logged at startup so
+        # operators can confirm the active gateway.
+        raw_api_key = _env_str("OPENAI_API_KEY")
+        self.OPENAI_API_KEY: str = raw_api_key
+        self.OPENAI_API_KEY_SOURCE: str = (
+            "env" if _is_real_secret(raw_api_key) else "missing"
+        )
         env_base_url = _env_str("OPENAI_BASE_URL")
         self.OPENAI_BASE_URL: str = env_base_url or DEFAULT_OPENAI_BASE_URL
         self.OPENAI_BASE_URL_SOURCE: str = "env" if env_base_url else "default-fallback"
@@ -111,10 +118,11 @@ class Config:
         self.OPENAI_MAX_RETRIES: int = _env_int("OPENAI_MAX_RETRIES", 2)
 
         logger.info(
-            "LLM provider configured: base_url=%s (source=%s) api_key=%s",
+            "LLM provider configured: base_url=%s (source=%s) api_key=%s (source=%s)",
             self.OPENAI_BASE_URL,
             self.OPENAI_BASE_URL_SOURCE,
             _mask_secret(self.OPENAI_API_KEY),
+            self.OPENAI_API_KEY_SOURCE,
         )
 
         # COMPASS model aliases (specialized models per task).
@@ -211,6 +219,7 @@ class Config:
             "openai_base_url_source": self.OPENAI_BASE_URL_SOURCE,
             "openai_api_key": masked_key,
             "openai_api_key_present": bool(_is_real_secret(self.OPENAI_API_KEY)),
+            "openai_api_key_source": self.OPENAI_API_KEY_SOURCE,
             "compass_chat_model": self.COMPASS_CHAT_MODEL,
             "compass_reasoning_model": self.COMPASS_REASONING_MODEL,
             "compass_embedding_model": self.COMPASS_EMBEDDING_MODEL,
