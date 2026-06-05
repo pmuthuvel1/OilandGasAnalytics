@@ -1,0 +1,19 @@
+{
+  "well_name": "Quick-Triage-010",
+  "analysis_type": "quick",
+  "trap_type": "structural",
+  "closure_area": 5.0,
+  "spill_depth": 3500,
+  "grv": 20.0,
+  "quality_threshold": 0.4,
+  "well_log_data": {
+    "well_name": "Quick-Triage-010",
+    "depth_values": [3200, 3300, 3400, 3500, 3600, 3700],
+    "gamma_ray": [60, 70, 80, 90, 100, 110],
+    "resistivity": [120, 90, 60, 40, 30, 25],
+    "porosity": [22, 19, 16, 13, 10, 8],
+    "depth_unit": "feet"
+  },
+  "user_notes": "Lightweight quick-look using well logs only. Skips the seismic specialist to demonstrate the quick-analysis non-linear branch."
+}
+
