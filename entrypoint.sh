@@ -1,14 +1,13 @@
 #!/bin/bash
 # Oil & Gas Analytics Multi-Agent System Entry Point
-# Starts both API (8000) and UI (8001,  run_ui.py) services with
+# Starts both API (8000) and UI (8001, run_ui.py) services with
 # proper signal handling.
 
 set -euo pipefail
 
 APP_ENV="${APP_ENV:-production}"
 API_PORT="${API_PORT:-8000}"
-# Default UI port is 8001 for run_ui.py .
-# kept as a back-compat alias.
+# Default UI port is 8001 for run_ui.py
 UI_PORT="${UI_PORT:-8001}"
 HOST="${HOST:-0.0.0.0}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
@@ -79,8 +78,8 @@ else
 fi
 API_PID=$!
 
-# Start UI (legacy dashboard; module was renamed from run_ui.py → run_ui_old.py)
-UI_OLD_PORT="${UI_PORT}" python run_ui_old.py &
+# Start UI - using run_ui.py (not run_ui_old.py)
+UI_PORT="${UI_PORT}" python run_ui.py &
 UI_PID=$!
 
 # Wait for either process to exit; propagate exit status
