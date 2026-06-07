@@ -455,6 +455,61 @@ Open:
 - Health:      http://localhost:8000/health
 - Readiness:   http://localhost:8000/readyz
 
+## Run with Docker
+
+```bash
+# Build
+cp .env.exmple .env
+
+docker build -t oil-gas-analytics-agents:latest .
+
+before running the Docker image, Please set or export OPENAI_API_KEY depends on Windows or linux
+
+For Linux
+export OPENAI_API_KEY=xxxx
+
+For Windows
+set OPENAI_API_KEY=xxxx 
+
+Run docker image with below Options.
+
+Option 1: with .env file
+
+# Run with secrets injected from a file (recommended)
+docker run --rm -p 8000:8000 -p 8001:8001 \
+   -e OPENAI_API_KEY=$OPENAI_API_KEY \
+   -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
+   --env-file .env \
+   -v $(pwd)/logs:/app/logs \
+  oil-gas-analytics-agents:latest
+
+Option 2: use .env file inside the docker image
+
+docker run --rm -p 8000:8000 -p 8001:8001 \
+ -e OPENAI_API_KEY=$OPENAI_API_KEY \
+ -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
+ -v $(pwd)/logs:/app/logs \
+ oil-gas-analytics-agents:latest
+
+```
+
+
+Key production knobs (see [`.env.example`](.env.example) for the full list):
+
+- `APP_ENV=production` — enables hard validation of secrets and CORS
+- `CORS_ORIGINS=https://app.example.com` — never `*` in production
+- `JSON_LOGS=true` — structured log lines
+- `WEB_CONCURRENCY=4` / `GUNICORN_TIMEOUT=180`
+- `OBS_EVENT_FILE` / `PERSISTENT_MEMORY_FILE` / `RAG_INDEX_FILE` for
+  shared volumes when running multiple replicas
+
+Container ships with `tini` as PID 1 and `app:app` (non-root) for safer
+process lifecycle. A `HEALTHCHECK` is built in. See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes manifests, gunicorn
+tuning, and zero-downtime rollouts.
+
+---
+
 ### 3. Common dev tasks
 
 ```bash
@@ -541,19 +596,7 @@ Troubleshooting (Core42 400s, env loading, RAG): [docs/TROUBLESHOOTING.md](docs/
 
 ---
 
-## CLI
 
-```bash
-oilgas --help                                                  # via `pip install -e .`
-python cli.py --help                                           # without install
-python cli.py analyze --input input_examples/example_1_northfield.json --quick
-python cli.py batch  --input-dir input_examples --output-dir runs/$(date +%s)
-python cli.py info
-python cli.py tools
-python cli.py examples
-python cli.py regen-outputs            # rebuild output_examples/ in SAMPLE_MODE
-python cli.py regen-outputs --check    # exit 1 if outputs are stale (CI)
-```
 
 ---
 
@@ -598,73 +641,8 @@ Loki, or any ELK pipeline.
 
 ---
 
-## Production deployment
-
-```bash
-# Build
-cp .env.exmple .env
-
-docker build -t oil-gas-analytics-agents:latest .
-
-before running the Docker image, Please set or export OPENAI_API_KEY depends on Windows or linux
-
-For Linux
-export OPENAI_API_KEY=xxxx
-
-For Windows
-set OPENAI_API_KEY=xxxx 
-
-Run docker image with below Options.
-
-Option 1: with .env file
-
-# Run with secrets injected from a file (recommended)
-docker run --rm -p 8000:8000 -p 8001:8001 \
-   -e OPENAI_API_KEY=$OPENAI_API_KEY \
-   -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
-   --env-file .env \
-   -v $(pwd)/logs:/app/logs \
-  oil-gas-analytics-agents:latest
-
-Option 2: use .env file inside the docker image
-
-docker run --rm -p 8000:8000 -p 8001:8001 \
- -e OPENAI_API_KEY=$OPENAI_API_KEY \
- -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
- -v $(pwd)/logs:/app/logs \
- oil-gas-analytics-agents:latest
-
-```
 
 
-Key production knobs (see [`.env.example`](.env.example) for the full list):
-
-- `APP_ENV=production` — enables hard validation of secrets and CORS
-- `CORS_ORIGINS=https://app.example.com` — never `*` in production
-- `JSON_LOGS=true` — structured log lines
-- `WEB_CONCURRENCY=4` / `GUNICORN_TIMEOUT=180`
-- `OBS_EVENT_FILE` / `PERSISTENT_MEMORY_FILE` / `RAG_INDEX_FILE` for
-  shared volumes when running multiple replicas
-
-Container ships with `tini` as PID 1 and `app:app` (non-root) for safer
-process lifecycle. A `HEALTHCHECK` is built in. See
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes manifests, gunicorn
-tuning, and zero-downtime rollouts.
-
----
-
-## Contributing
-
-1. `make install-dev`
-2. Create a feature branch, follow [CONTRIBUTING.md](CONTRIBUTING.md).
-3. `make ci` should be green locally before opening a PR.
-4. New input examples? Add the JSON to `input_examples/`, then run
-   `make examples` to materialize the matching `output_examples/<...>_output.json`.
-
-Security issues: please follow [SECURITY.md](SECURITY.md) instead of opening
-public GitHub issues.
-
----
 
 ## License
 
