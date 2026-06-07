@@ -564,7 +564,7 @@ python cli.py regen-outputs --check    # exit 1 if outputs are stale (CI)
 | GET    | `/health`                     | Liveness probe                                       |
 | GET    | `/readyz`                     | Readiness probe (checks LLM configuration)          |
 | GET    | `/info`                       | Redacted system + config snapshot                    |
-| POST   | `/analyze`                    | Run the full or quick analysis workflow              |
+| POST   | `/run`                    | Run the full or quick analysis workflow              |
 | POST   | `/analyze/batch`              | Batch analysis across multiple wells                 |
 | POST   | `/tools/{tool_name}`          | Call any registered tool directly                    |
 | GET    | `/tools`                      | List tools and categories                            |
@@ -605,6 +605,16 @@ Loki, or any ELK pipeline.
 cp .env.exmple .env
 
 docker build -t oil-gas-analytics-agents:latest .
+
+before running the Docker image, Please set or export OPENAI_API_KEY depends on Windows or linux
+
+For Linux
+export OPENAI_API_KEY=xxxx
+
+For Windows
+set OPENAI_API_KEY=xxxx 
+
+Run docker image with below Options.
 
 Option 1: with .env file
 
