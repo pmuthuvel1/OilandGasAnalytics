@@ -1209,9 +1209,18 @@ class AgentExecutorManager:
             await run_one(agent_name)
 
     def execute_collaborative_workflow(
-        self, user_input: Dict[str, Any], quick: bool = False, max_review_cycles: int = 2
+        self,
+        user_input: Dict[str, Any],
+        quick: bool = False,
+        max_review_cycles: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Sync wrapper around the async collaborative workflow."""
+        """Sync wrapper around the async collaborative workflow.
+
+        ``max_review_cycles`` controls the outer planner→executor→evaluator
+        review loop. When ``None`` (the default) it falls back to
+        ``config.MAX_AGENT_ITERATIONS`` (env var ``MAX_AGENT_ITERATIONS``,
+        default 3).
+        """
         try:
             asyncio.get_running_loop()
         except RuntimeError:
@@ -1233,7 +1242,10 @@ class AgentExecutorManager:
             ).result()
 
     async def execute_collaborative_workflow_async(
-        self, user_input: Dict[str, Any], quick: bool = False, max_review_cycles: int = 2
+        self,
+        user_input: Dict[str, Any],
+        quick: bool = False,
+        max_review_cycles: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Async Planner -> Research -> (parallel) Executor -> Evaluator -> Final.
 
@@ -1246,17 +1258,30 @@ class AgentExecutorManager:
         - The evaluator can block the report writer via ``report_gate``.
         """
 
+        # Resolve the outer review-cycle cap. Explicit caller value wins,
+        # otherwise fall back to MAX_AGENT_ITERATIONS from .env (default 3).
+        if max_review_cycles is None:
+            max_review_cycles = self.config.MAX_AGENT_ITERATIONS
+        max_review_cycles = max(1, int(max_review_cycles))
+
         state = AgentState(
             user_input=dict(user_input),
             shared_memory={
                 "workflow_goal": "Evidence-grounded oil and gas prospect analysis",
                 "llm_configured": self.reasoning_llm is not None,
                 "needs": [],
+                "max_agent_iterations": max_review_cycles,
             },
         )
         workflow_id = datetime.now().isoformat()
         # Fresh per-run trace file/id so each workflow has an isolated log.
         self.trace_file, self.trace_id = new_trace_file()
+        logger.info(
+            "Workflow %s starting with max_agent_iterations=%d (source=%s)",
+            workflow_id,
+            max_review_cycles,
+            "caller" if max_review_cycles != self.config.MAX_AGENT_ITERATIONS else "env/config",
+        )
 
         # Record the resolved LLM configuration as the very first trace event
         # so every run's JSONL log clearly shows where OPENAI_API_KEY and
@@ -1281,6 +1306,8 @@ class AgentExecutorManager:
                 "compass_reasoning_model": cfg.COMPASS_REASONING_MODEL,
                 "compass_embedding_model": cfg.COMPASS_EMBEDDING_MODEL,
                 "reasoning_client_ready": self.reasoning_client is not None,
+                "max_iterations": cfg.MAX_ITERATIONS,
+                "max_agent_iterations": max_review_cycles,
             },
             status="success" if cfg.llm_enabled else "skipped",
             extra={
