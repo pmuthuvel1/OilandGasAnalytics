@@ -494,19 +494,8 @@ docker run --rm -p 8000:8000 -p 8001:8001 \
 ```
 
 
-Key production knobs (see [`.env.example`](.env.example) for the full list):
 
-- `APP_ENV=production` — enables hard validation of secrets and CORS
-- `CORS_ORIGINS=https://app.example.com` — never `*` in production
-- `JSON_LOGS=true` — structured log lines
-- `WEB_CONCURRENCY=4` / `GUNICORN_TIMEOUT=180`
-- `OBS_EVENT_FILE` / `PERSISTENT_MEMORY_FILE` / `RAG_INDEX_FILE` for
-  shared volumes when running multiple replicas
 
-Container ships with `tini` as PID 1 and `app:app` (non-root) for safer
-process lifecycle. A `HEALTHCHECK` is built in. See
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes manifests, gunicorn
-tuning, and zero-downtime rollouts.
 
 ---
 
