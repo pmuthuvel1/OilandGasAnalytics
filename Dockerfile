@@ -13,9 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR ${APP_HOME}
 
-# System deps (kept minimal)
+# System deps (including bash for proper script execution)
 RUN apt-get update \
- && apt-get install -y --no-install-recommends gcc curl tini \
+ && apt-get install -y --no-install-recommends gcc curl tini bash \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies first to leverage cache
@@ -54,5 +54,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # Pass secrets via -e or --env-file, e.g.:
 #   docker run --env-file .env -p 8000:8000 -p 8001:8001 oil-gas-analytics
-ENTRYPOINT ["/usr/bin/tini", "--", "sh", "entrypoint.sh"]
-
+ENTRYPOINT ["/usr/bin/tini", "--", "bash", "entrypoint.sh"]
