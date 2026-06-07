@@ -7,7 +7,7 @@ import pytest
 from app.config import (
     DEFAULT_OPENAI_BASE_URL,
     Config,
-    _mask_secret,
+    _secret_status,
     get_config,
 )
 
@@ -119,29 +119,33 @@ def test_config_init_logs_provider_setup(
         line = messages[-1]
         assert "base_url=https://api.core42.ai/v1" in line
         assert "source=default-fallback" in line
-        assert "api_key=<not set>" in line
+        assert "api_key_status=missing" in line
+        # The raw key (or any portion of it) must never appear in logs.
+        assert "OPENAI_API_KEY=" not in line
     finally:
         get_config.cache_clear()  # type: ignore[attr-defined]
 
 
 # ---------------------------------------------------------------------------
-# _mask_secret: log-safe rendering
+# _secret_status: log-safe presence reporting (NEVER returns the value)
 # ---------------------------------------------------------------------------
-def test_mask_secret_handles_empty_and_placeholders() -> None:
-    assert _mask_secret("") == "<not set>"
-    assert _mask_secret("NA") == "<placeholder>"
-    assert _mask_secret("CHANGEME") == "<placeholder>"
+def test_secret_status_missing_for_empty() -> None:
+    assert _secret_status("") == "missing"
 
 
-def test_mask_secret_short_key_is_fully_masked() -> None:
-    assert _mask_secret("abc12345") == "******** (len=8)"
+def test_secret_status_placeholder_for_dummy_values() -> None:
+    assert _secret_status("NA") == "placeholder"
+    assert _secret_status("CHANGEME") == "placeholder"
 
 
-def test_mask_secret_long_key_keeps_head_and_tail() -> None:
-    # Real-looking key length, must not leak the middle.
-    rendered = _mask_secret("sk-abcdefghij1234567890wxyz")
-    assert rendered.startswith("sk-a")
-    assert rendered.endswith("wxyz (len=27)")
-    assert "ghij" not in rendered  # middle is hidden
+def test_secret_status_present_for_real_key_without_leaking() -> None:
+    secret = "sk-abcdefghij1234567890wxyz"
+    rendered = _secret_status(secret)
+    assert rendered == "present"
+    # The helper must NEVER echo the value (full, masked, or length).
+    assert secret not in rendered
+    assert "sk-" not in rendered
+    assert "wxyz" not in rendered
+    assert str(len(secret)) not in rendered
 
 
