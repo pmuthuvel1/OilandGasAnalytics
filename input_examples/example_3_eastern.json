@@ -1,10 +1,29 @@
 {
+  "use_case_id": 4,
   "well_name": "Eastern Prospect-003",
   "analysis_type": "quick",
   "seismic_data": {
     "well_name": "Eastern Prospect-003",
-    "depth_values": [800, 900, 1000, 1100, 1200, 1300, 1400, 1500],
-    "amplitude_values": [0.3, 0.9, 1.8, 2.5, 1.2, 0.8, 1.5, 0.4],
+    "depth_values": [
+      800,
+      900,
+      1000,
+      1100,
+      1200,
+      1300,
+      1400,
+      1500
+    ],
+    "amplitude_values": [
+      0.3,
+      0.9,
+      1.8,
+      2.5,
+      1.2,
+      0.8,
+      1.5,
+      0.4
+    ],
     "frequency_content": {
       "low_freq_10_20Hz": 0.35,
       "mid_freq_20_50Hz": 0.48,
@@ -13,10 +32,38 @@
   },
   "well_log_data": {
     "well_name": "Eastern Prospect-003",
-    "depth_values": [1600, 1700, 1800, 1900, 2000, 2100],
-    "gamma_ray": [70, 95, 60, 140, 75, 85],
-    "resistivity": [160, 35, 180, 20, 150, 40],
-    "porosity": [20, 12, 22, 3, 19, 11],
+    "depth_values": [
+      1600,
+      1700,
+      1800,
+      1900,
+      2000,
+      2100
+    ],
+    "gamma_ray": [
+      70,
+      95,
+      60,
+      140,
+      75,
+      85
+    ],
+    "resistivity": [
+      160,
+      35,
+      180,
+      20,
+      150,
+      40
+    ],
+    "porosity": [
+      20,
+      12,
+      22,
+      3,
+      19,
+      11
+    ],
     "depth_unit": "feet"
   },
   "user_notes": "Shallow water prospects. Quick assessment for farmout presentation."
