@@ -1,4 +1,5 @@
 {
+  "use_case_id": 4,
   "well_name": "Gulf-DeepWater-004",
   "analysis_type": "full",
   "trap_type": "structural",
@@ -8,22 +9,93 @@
   "quality_threshold": 0.65,
   "seismic_data": {
     "well_name": "Gulf-DeepWater-004",
-    "depth_values": [7800, 7900, 8000, 8100, 8200, 8300, 8400, 8500, 8600, 8700, 8800, 8900, 9000],
-    "amplitude_values": [0.4, 0.7, 1.1, 2.5, 4.8, 5.6, 4.9, 3.1, 1.7, 0.9, 0.6, 0.5, 0.4],
+    "depth_values": [
+      7800,
+      7900,
+      8000,
+      8100,
+      8200,
+      8300,
+      8400,
+      8500,
+      8600,
+      8700,
+      8800,
+      8900,
+      9000
+    ],
+    "amplitude_values": [
+      0.4,
+      0.7,
+      1.1,
+      2.5,
+      4.8,
+      5.6,
+      4.9,
+      3.1,
+      1.7,
+      0.9,
+      0.6,
+      0.5,
+      0.4
+    ],
     "frequency_content": {
       "low_freq_10_20Hz": 0.45,
-      "mid_freq_20_50Hz": 0.40,
+      "mid_freq_20_50Hz": 0.4,
       "high_freq_50_100Hz": 0.15
     }
   },
   "well_log_data": {
     "well_name": "Gulf-DeepWater-004",
-    "depth_values": [8200, 8250, 8300, 8350, 8400, 8450, 8500, 8550, 8600, 8650],
-    "gamma_ray": [40, 38, 42, 45, 110, 115, 48, 40, 38, 95],
-    "resistivity": [185, 220, 195, 175, 22, 18, 165, 240, 215, 28],
-    "porosity": [27, 29, 28, 26, 6, 4, 25, 30, 28, 8],
+    "depth_values": [
+      8200,
+      8250,
+      8300,
+      8350,
+      8400,
+      8450,
+      8500,
+      8550,
+      8600,
+      8650
+    ],
+    "gamma_ray": [
+      40,
+      38,
+      42,
+      45,
+      110,
+      115,
+      48,
+      40,
+      38,
+      95
+    ],
+    "resistivity": [
+      185,
+      220,
+      195,
+      175,
+      22,
+      18,
+      165,
+      240,
+      215,
+      28
+    ],
+    "porosity": [
+      27,
+      29,
+      28,
+      26,
+      6,
+      4,
+      25,
+      30,
+      28,
+      8
+    ],
     "depth_unit": "feet"
   },
   "user_notes": "Subsalt deepwater turbidite prospect. Class-III AVO bright spot expected at top reservoir. Two stacked Miocene sand fans encased in shale seals. High capex, must clear quality gate >=0.65."
 }
-
