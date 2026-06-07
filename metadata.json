@@ -1,11 +1,22 @@
 {
-  "use_case_id": "6",
-  "name": "Oil & Gas Analytics Multi-Agent System",
-  "version": "1.0.0",
+  "use_case_id": 4,
+  "name": "oil-gas-analytics",
+  "version": "1.1.0",
   "description": "Production-ready multi-agent AI system using LangGraph for oil & gas exploration, well analysis, and reservoir characterization",
-  "author": "LangGraph Analytics Team",
+  "author": "Muthuvel Periyasamy",
   "license": "MIT",
+  "python_requires": ">=3.12",
   "agents": [
+    {
+      "name": "PlannerAgent",
+      "description": "Dynamically delegates specialist agents based on available evidence and prior critique",
+      "capabilities": ["dynamic delegation", "retrieval broadening", "iteration control"]
+    },
+    {
+      "name": "ResearchAgent",
+      "description": "Loads local seismic/well-log evidence and recommends SEG/SEAM open-data sources",
+      "capabilities": ["local CSV ingestion", "SEAM LAS ingestion", "open-data catalog"]
+    },
     {
       "name": "SeismicAnalyzer",
       "description": "Analyzes seismic data for subsurface structures and hydrocarbon indicators",
@@ -27,29 +38,39 @@
       "capabilities": ["risk analysis", "trap evaluation", "volumetric estimation"]
     },
     {
+      "name": "EvaluatorAgent",
+      "description": "Critiques agent outputs, scores quality, and gates the report writer",
+      "capabilities": ["evidence scoring", "quality gating", "revision requests"]
+    },
+    {
       "name": "ReportGenerator",
-      "description": "Synthesizes analysis from all agents into comprehensive reports",
-      "capabilities": ["summary generation", "recommendation formulation", "visualization"]
+      "description": "Synthesizes analysis from all agents into a comprehensive technical report",
+      "capabilities": ["summary generation", "recommendation formulation", "visualization specs"]
     }
   ],
   "capabilities": [
-    "Multi-well analysis",
-    "Seismic interpretation",
-    "Reservoir characterization",
-    "Risk assessment",
-    "Volumetric calculation",
-    "Trend analysis"
+    "Dynamic planner-executor-evaluator agent collaboration with critique loops",
+    "Retrieval-augmented generation over project corpus (RAG)",
+    "Persistent cross-run memory keyed by well/asset",
+    "Tool-first execution with deterministic fallback (SAMPLE_MODE)",
+    "Per-run JSONL agent trace logs with stable trace_id",
+    "Structured observability events (logs/events.jsonl, optional OpenTelemetry)",
+    "Async parallel execution of independent specialist agents",
+    "Compass / Azure / OpenAI compatible chat + reasoning + embedding models"
   ],
   "data_sources": [
-    "Well logs (LAS format)",
-    "Seismic data (SEG-Y)",
-    "Core analysis data",
-    "Production history"
+    "Well logs (LAS format, SEAM Phase I)",
+    "Seismic data (CSV / SEG-Y references)",
+    "Sample CSV datasets bundled in data/",
+    "SEG Open Data catalog references"
   ],
   "deployment": {
     "api_port": 8000,
     "ui_port": 8001,
     "entry_point": "run.py",
+    "ui_entry_point": "run_ui.py",
+    "cli_entry_point": "cli.py",
     "docker_support": true
   }
 }
+
