@@ -1,0 +1,50 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+.github
+
+# Local environment
+.env
+.env.*
+!.env.example
+.venv
+venv
+
+# IDE / OS
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.egg-info
+build
+dist
+.pytest_cache
+.ruff_cache
+.mypy_cache
+htmlcov
+coverage.xml
+.coverage
+
+# Logs (runtime-generated)
+logs/agent_logs.json
+logs/events.jsonl
+logs/persistent_memory.json
+logs/agent_trace_*.jsonl
+logs/rag_index.json
+
+# Heavy data (mount instead of baking in)
+data/SEAM_I_Well_Log_Delivery
+data/uploads
+
+# Local docs scratch
+docs/_build
+
+# Pre-commit
+.pre-commit-config.yaml
+
