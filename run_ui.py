@@ -47,35 +47,56 @@ from app.config import get_config
 from app.logging_config import configure_logging, get_logger
 
 # --------------------------------------------------------------------------- #
-# Bootstrap (mirrors run_ui_old.py)                                           #
+# Bootstrap                                                                   #
 # --------------------------------------------------------------------------- #
+# NOTE:
+#   This UI process is intentionally **stateless** with respect to LLM
+#   credentials. ``OPENAI_API_KEY`` and ``OPENAI_BASE_URL`` are owned and
+#   validated exclusively by the backend API server (``run.py`` on port
+#   8000). The UI never reads them, never logs their presence, and never
+#   gates any action on them — it simply requires the backend ``/run``
+#   endpoint to be reachable. This keeps secrets on a single boundary
+#   (the API process) and prevents accidental disclosure via UI logs.
 config = get_config()
 configure_logging(level=config.LOG_LEVEL, json_logs=config.JSON_LOGS)
 logger = get_logger("run_ui")
 
-
-def _api_key_status(value: str) -> str:
-    """Return ``configured`` / ``not configured`` — never the secret itself."""
-    return "configured" if value and value.strip() else "not configured"
-
-
-# The API key itself is NEVER printed (not even masked) — only its
-# presence status and source are logged.
-logger.info(
-    "OPENAI_API_KEY: %s (source=%s)",
-    _api_key_status(config.OPENAI_API_KEY),
-    config.OPENAI_API_KEY_SOURCE,
-)
-logger.info(
-    "LLM config: base_url=%s (source=%s) chat=%s reasoning=%s llm_enabled=%s",
-    config.OPENAI_BASE_URL,
-    config.OPENAI_BASE_URL_SOURCE,
-    config.COMPASS_CHAT_MODEL,
-    config.COMPASS_REASONING_MODEL,
-    config.llm_enabled,
-)
-
 API_BASE_URL = config.API_BASE_URL
+logger.info(
+    "UI proxies to backend API at %s — OPENAI_API_KEY / OPENAI_BASE_URL "
+    "are validated by that server, not by this UI.",
+    API_BASE_URL,
+)
+
+
+def _probe_backend(url: str, timeout: float = 3.0) -> Tuple[bool, str]:
+    """Best-effort one-shot health probe of the backend ``/health`` endpoint.
+
+    The UI does **not** crash when the backend is down; we just log a clear
+    warning so the operator knows to start ``python run.py`` (port 8000)
+    before submitting an analysis.
+    """
+    health_url = url.rstrip("/") + "/health"
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            r = client.get(health_url)
+        if r.status_code == 200:
+            return True, f"HTTP 200 — backend reachable at {health_url}"
+        return False, f"HTTP {r.status_code} from {health_url}"
+    except Exception as exc:  # pragma: no cover - network dependent
+        return False, f"unreachable: {exc.__class__.__name__}: {exc}"
+
+
+_backend_ok, _backend_msg = _probe_backend(API_BASE_URL)
+if _backend_ok:
+    logger.info("Backend health check: %s", _backend_msg)
+else:
+    logger.warning(
+        "Backend health check FAILED (%s). The UI will still start; "
+        "please ensure `python run.py` is running on %s before submitting.",
+        _backend_msg,
+        API_BASE_URL,
+    )
 # UI_PORT lets ops override the default 8001 without touching code. We
 # fall back to ``config.UI_PORT`` (which itself defaults to 8001) so the
 # rest of the codebase stays consistent.
@@ -488,9 +509,56 @@ DASHBOARD_HTML = """
             border: 1px solid rgba(110,231,255,0.3);
             border-radius: 4px; color: #e6edf3; font-family: inherit; font-size: 13px;
         }
+        /* --- Select / dropdown readability (Windows Chrome fix) -------- */
+        /* Force a dark UA palette so the dropdown popup, scrollbar and
+           focus ring don't inherit the OS-default white-on-white look. */
+        select {
+            color-scheme: dark;
+            /* The closed control needs a solid fill — semi-transparent
+               backgrounds render as white on Windows Chrome. */
+            background-color: #142447;
+            background-image:
+                linear-gradient(45deg, transparent 50%, #6ee7ff 50%),
+                linear-gradient(135deg, #6ee7ff 50%, transparent 50%);
+            background-position:
+                calc(100% - 18px) calc(50% - 3px),
+                calc(100% - 13px) calc(50% - 3px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 32px;
+            cursor: pointer;
+        }
+        /* The open-list popup uses native rendering — these rules make
+           Chrome (Win/Mac/Linux) honour our colours instead of going
+           white-on-white. */
+        select option,
+        select optgroup {
+            background-color: #142447;
+            color: #e6edf3;
+        }
+        select optgroup {
+            color: #6ee7ff;
+            font-weight: 700;
+            font-style: normal;
+            letter-spacing: 0.3px;
+        }
+        select option {
+            padding: 6px 8px;
+        }
+        select option:hover,
+        select option:focus,
+        select option:checked,
+        select option[selected] {
+            background: linear-gradient(0deg, #6ee7ff 0%, #6ee7ff 100%);
+            color: #0f1a2e;
+            font-weight: 600;
+        }
         textarea { min-height: 110px; font-family: 'Courier New', monospace; }
         input:focus, textarea:focus, select:focus {
-            outline: none; border-color: #6ee7ff; background: rgba(110,231,255,0.08);
+            outline: none; border-color: #6ee7ff; background-color: #1b2d57;
         }
         button {
             background: linear-gradient(135deg, #6ee7ff 0%, #2a93b8 100%);
