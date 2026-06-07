@@ -1,4 +1,5 @@
 {
+  "use_case_id": 4,
   "well_name": "Faulted-HighRisk-008",
   "analysis_type": "full",
   "trap_type": "fault-bounded",
@@ -8,22 +9,99 @@
   "quality_threshold": 0.7,
   "seismic_data": {
     "well_name": "Faulted-HighRisk-008",
-    "depth_values": [6000, 6100, 6200, 6300, 6400, 6500, 6600, 6700, 6800, 6900, 7000, 7100, 7200, 7300, 7400, 7500],
-    "amplitude_values": [1.2, 3.8, 0.5, 3.5, 0.4, 4.1, 0.6, 3.9, 0.5, 4.4, 0.7, 3.6, 0.6, 4.0, 0.5, 3.8],
+    "depth_values": [
+      6000,
+      6100,
+      6200,
+      6300,
+      6400,
+      6500,
+      6600,
+      6700,
+      6800,
+      6900,
+      7000,
+      7100,
+      7200,
+      7300,
+      7400,
+      7500
+    ],
+    "amplitude_values": [
+      1.2,
+      3.8,
+      0.5,
+      3.5,
+      0.4,
+      4.1,
+      0.6,
+      3.9,
+      0.5,
+      4.4,
+      0.7,
+      3.6,
+      0.6,
+      4.0,
+      0.5,
+      3.8
+    ],
     "frequency_content": {
-      "low_freq_10_20Hz": 0.30,
-      "mid_freq_20_50Hz": 0.50,
-      "high_freq_50_100Hz": 0.20
+      "low_freq_10_20Hz": 0.3,
+      "mid_freq_20_50Hz": 0.5,
+      "high_freq_50_100Hz": 0.2
     }
   },
   "well_log_data": {
     "well_name": "Faulted-HighRisk-008",
-    "depth_values": [6200, 6300, 6400, 6500, 6600, 6700, 6800, 6900, 7000, 7100],
-    "gamma_ray": [70, 145, 65, 150, 60, 155, 80, 140, 75, 160],
-    "resistivity": [110, 18, 130, 15, 145, 12, 95, 22, 105, 10],
-    "porosity": [19, 4, 22, 3, 24, 2, 17, 5, 20, 2],
+    "depth_values": [
+      6200,
+      6300,
+      6400,
+      6500,
+      6600,
+      6700,
+      6800,
+      6900,
+      7000,
+      7100
+    ],
+    "gamma_ray": [
+      70,
+      145,
+      65,
+      150,
+      60,
+      155,
+      80,
+      140,
+      75,
+      160
+    ],
+    "resistivity": [
+      110,
+      18,
+      130,
+      15,
+      145,
+      12,
+      95,
+      22,
+      105,
+      10
+    ],
+    "porosity": [
+      19,
+      4,
+      22,
+      3,
+      24,
+      2,
+      17,
+      5,
+      20,
+      2
+    ],
     "depth_unit": "feet"
   },
   "user_notes": "Heavily faulted compartmentalized reservoir. Seal integrity and fault juxtaposition are the key risks. Evaluator should raise the quality threshold and request a critique cycle."
 }
-
