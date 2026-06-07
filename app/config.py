@@ -70,15 +70,18 @@ def _is_real_secret(value: str) -> bool:
     return bool(value) and value.strip().upper() not in _PLACEHOLDER_SECRETS
 
 
-def _mask_secret(value: str) -> str:
-    """Render an API key as ``abcd...wxyz (len=N)`` so it's safe to log."""
+def _secret_status(value: str) -> str:
+    """Return ``present``/``missing``/``placeholder`` — never the value itself.
+
+    We deliberately do not return any portion of the secret (not even a
+    masked prefix/suffix or length) so that logs and diagnostics endpoints
+    can NEVER leak ``OPENAI_API_KEY`` material.
+    """
     if not value:
-        return "<not set>"
+        return "missing"
     if not _is_real_secret(value):
-        return "<placeholder>"
-    if len(value) <= 8:
-        return f"{'*' * len(value)} (len={len(value)})"
-    return f"{value[:4]}...{value[-4:]} (len={len(value)})"
+        return "placeholder"
+    return "present"
 
 
 class Config:
@@ -118,10 +121,10 @@ class Config:
         self.OPENAI_MAX_RETRIES: int = _env_int("OPENAI_MAX_RETRIES", 2)
 
         logger.info(
-            "LLM provider configured: base_url=%s (source=%s) api_key=%s (source=%s)",
+            "LLM provider configured: base_url=%s (source=%s) api_key_status=%s (source=%s)",
             self.OPENAI_BASE_URL,
             self.OPENAI_BASE_URL_SOURCE,
-            _mask_secret(self.OPENAI_API_KEY),
+            _secret_status(self.OPENAI_API_KEY),
             self.OPENAI_API_KEY_SOURCE,
         )
 
@@ -146,7 +149,12 @@ class Config:
         self.JSON_LOGS: bool = _env_bool("JSON_LOGS", self.APP_ENV == "production")
 
         # Agent runtime
+        # ``MAX_ITERATIONS`` caps the per-agent INTERNAL tool-use loop
+        # (passed straight to LangChain's ``AgentExecutor(max_iterations=...)``).
+        # ``MAX_AGENT_ITERATIONS`` caps the OUTER planner→executor→evaluator
+        # *review/refinement* loop run by ``execute_collaborative_workflow``.
         self.MAX_ITERATIONS: int = _env_int("MAX_ITERATIONS", 10)
+        self.MAX_AGENT_ITERATIONS: int = max(1, _env_int("MAX_AGENT_ITERATIONS", 3))
         self.AGENT_TIMEOUT: int = _env_int("AGENT_TIMEOUT", 300)
         self.MAX_CONTEXT_CHARS: int = _env_int("MAX_CONTEXT_CHARS", 24_000)
 
@@ -228,6 +236,7 @@ class Config:
             "llm_enabled": self.llm_enabled,
             "log_level": self.LOG_LEVEL,
             "max_iterations": self.MAX_ITERATIONS,
+            "max_agent_iterations": self.MAX_AGENT_ITERATIONS,
             "agent_timeout": self.AGENT_TIMEOUT,
             "cors_origins": self.CORS_ORIGINS,
         }
