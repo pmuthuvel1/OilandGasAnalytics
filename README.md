@@ -602,14 +602,30 @@ Loki, or any ELK pipeline.
 
 ```bash
 # Build
+cp .env.exmple .env
+
 docker build -t oga:latest .
+
+Option 1: with .env file
 
 # Run with secrets injected from a file (recommended)
 docker run --rm -p 8000:8000 -p 8001:8001 \
-  --env-file production.env \
+   -e OPENAI_API_KEY=$OPENAI_API_KEY \
+   -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
+   --env-file .env \
+   -v $(pwd)/logs:/app/logs \
+  OilandGasAnalysisAgents:latest
+
+Option 2: use .env file inside the docker image
+
+docker run --rm -p 8000:8000 -p 8001:8001 \
+ -e OPENAI_API_KEY=$OPENAI_API_KEY \
+ -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
   -v $(pwd)/logs:/app/logs \
-  oga:latest
+  OilandGasAnalysisAgents:latest
+
 ```
+
 
 Key production knobs (see [`.env.example`](.env.example) for the full list):
 
