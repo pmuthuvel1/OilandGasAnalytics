@@ -5,12 +5,12 @@
 
 set -euo pipefail
 
-APP_ENV="${APP_ENV:-development}"
+APP_ENV="${APP_ENV:-production}"
 API_PORT="${API_PORT:-8000}"
 # Default UI port is 8003 since run_ui.py was renamed to run_ui_old.py.
 # Set UI_OLD_PORT directly if you want to override per-process; UI_PORT is
 # kept as a back-compat alias.
-UI_PORT="${UI_PORT:-${UI_OLD_PORT:-8003}}"
+UI_PORT="${UI_PORT:-8001}"
 HOST="${HOST:-0.0.0.0}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
 WEB_CONCURRENCY="${WEB_CONCURRENCY:-2}"
