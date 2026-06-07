@@ -390,33 +390,7 @@ SAMPLE_MODE=true python cli.py run \
   --output /tmp/result.json
 ```
 
----
 
-## Why this project
-
-This isn't a toy notebook — it's a deployable multi-agent system that ships:
-
-| Capability               | Where                                                     |
-| ------------------------ | --------------------------------------------------------- |
-| Dynamic delegation       | `_planner_delegate` in `app/agents.py`                    |
-| Critique loop            | `_evaluate_iteration` + `_finalize_report` (role gate)    |
-| Retry / broaden retrieval| `rag.retrieve_with_retry`, `_broaden_retrieval`           |
-| Shared memory            | `AgentState.shared_memory`, `app/memory.py` (cross-run)   |
-| Escalation               | `_llm_escalated` switch to deterministic sample mode      |
-| Role authority           | Evaluator can `block_report_writer` via `report_gate`     |
-| Non-linear flow          | Iteration-loop with quality / risk branching              |
-| Async orchestration      | `_run_agents_parallel` (independent agents in parallel)   |
-| RAG                      | `app/rag.py` (Compass embeddings, on-disk index)          |
-| Tool-first execution     | `app/tools.py` (15+ deterministic domain tools)           |
-| Observability            | `app/observability.py` (JSONL events + optional OTel)     |
-| Per-run trace            | `app/logging_utils.py` → `logs/agent_trace_*.jsonl`       |
-| Structured logging       | `app/logging_config.py` (JSON-lines in production)        |
-| Sample mode              | `SAMPLE_MODE=true` runs end-to-end with no API key        |
-
-A complete trace example is in [docs/SAMPLE_MODE.md](docs/SAMPLE_MODE.md).
-Architecture, agent contracts, and deployment notes live under [`docs/`](docs/).
-
----
 
 ## Quickstart
 
@@ -459,6 +433,10 @@ Open:
 
 ```bash
 # Build
+
+git clone https://github.com/pmuthuvel1/OilandGasAnalytics.git
+
+cd OilandGasAnalytics
 cp .env.exmple .env
 
 docker build -t oil-gas-analytics-agents:latest .
@@ -492,23 +470,6 @@ docker run --rm -p 8000:8000 -p 8001:8001 \
  oil-gas-analytics-agents:latest
 
 ```
-
-
-
-
-
----
-
-### 3. Common dev tasks
-
-```bash
-make help              # show all targets
-make install-dev       # pip install dev tooling (pytest, ruff, mypy, …)
-make ci                # ruff + mypy + pytest with coverage
-make examples          # regenerate output_examples/ from input_examples/
-make analyze INPUT=input_examples/example_4_deepwater_gulf.json
-```
-
 ---
 
 ## Bundled examples
@@ -611,6 +572,35 @@ Troubleshooting (Core42 400s, env loading, RAG): [docs/TROUBLESHOOTING.md](docs/
 Full docs: [docs/API.md](docs/API.md).
 
 ---
+
+---
+
+## Capabilities of this project
+
+this is a deployable multi-agent system that ships:
+
+| Capability               | Where                                                     |
+| ------------------------ | --------------------------------------------------------- |
+| Dynamic delegation       | `_planner_delegate` in `app/agents.py`                    |
+| Critique loop            | `_evaluate_iteration` + `_finalize_report` (role gate)    |
+| Retry / broaden retrieval| `rag.retrieve_with_retry`, `_broaden_retrieval`           |
+| Shared memory            | `AgentState.shared_memory`, `app/memory.py` (cross-run)   |
+| Escalation               | `_llm_escalated` switch to deterministic sample mode      |
+| Role authority           | Evaluator can `block_report_writer` via `report_gate`     |
+| Non-linear flow          | Iteration-loop with quality / risk branching              |
+| Async orchestration      | `_run_agents_parallel` (independent agents in parallel)   |
+| RAG                      | `app/rag.py` (Compass embeddings, on-disk index)          |
+| Tool-first execution     | `app/tools.py` (15+ deterministic domain tools)           |
+| Observability            | `app/observability.py` (JSONL events + optional OTel)     |
+| Per-run trace            | `app/logging_utils.py` → `logs/agent_trace_*.jsonl`       |
+| Structured logging       | `app/logging_config.py` (JSON-lines in production)        |
+| Sample mode              | `SAMPLE_MODE=true` runs end-to-end with no API key        |
+
+A complete trace example is in [docs/SAMPLE_MODE.md](docs/SAMPLE_MODE.md).
+Architecture, agent contracts, and deployment notes live under [`docs/`](docs/).
+
+---
+
 
 ## Observability
 
