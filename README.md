@@ -604,7 +604,7 @@ Loki, or any ELK pipeline.
 # Build
 cp .env.exmple .env
 
-docker build -t oga:latest .
+docker build -t oil-gas-analytics-agents:latest .
 
 Option 1: with .env file
 
@@ -614,15 +614,15 @@ docker run --rm -p 8000:8000 -p 8001:8001 \
    -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
    --env-file .env \
    -v $(pwd)/logs:/app/logs \
-  OilandGasAnalysisAgents:latest
+  oil-gas-analytics-agents:latest
 
 Option 2: use .env file inside the docker image
 
 docker run --rm -p 8000:8000 -p 8001:8001 \
  -e OPENAI_API_KEY=$OPENAI_API_KEY \
  -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
-  -v $(pwd)/logs:/app/logs \
-  OilandGasAnalysisAgents:latest
+ -v $(pwd)/logs:/app/logs \
+ oil-gas-analytics-agents:latest
 
 ```
 
