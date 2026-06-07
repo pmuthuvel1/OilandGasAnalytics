@@ -1,46 +1,76 @@
-"""Main API server for Oil & Gas Analytics Multi-Agent System - Runs on port 8000"""
+"""Main API server for Oil & Gas Analytics Multi-Agent System."""
 
 import os
-import logging
 import json
+import time
+import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, File, UploadFile, BackgroundTasks
+from fastapi import FastAPI, HTTPException, File, UploadFile, BackgroundTasks, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+from fastapi.middleware.gzip import GZipMiddleware
+from pydantic import BaseModel, Field
 
 # Import application components
+from app import __version__
 from app.config import get_config
 from app.data_sources import SEG_OPEN_DATA_SOURCES
+from app.logging_config import clear_context, configure_logging, get_logger, set_context
 from app.workflows import WorkflowOrchestrator
 from app.tools import TOOLS
+from app import rag as rag_module
+from app import memory as memory_module
 
 config = get_config()
 
-# Create logs directory if it doesn't exist
-os.makedirs("logs", exist_ok=True)
+# Structured logging (JSON in production, human-readable otherwise).
+configure_logging(level=config.LOG_LEVEL, json_logs=config.JSON_LOGS)
+logger = get_logger("oilgas.api")
+
+
+def _api_key_status(value: str) -> str:
+    """Return ``configured`` / ``not configured`` — never the secret itself."""
+    return "configured" if value and value.strip() else "not configured"
+
+
+# Log the active LLM configuration so it's obvious in the logs that
+# OPENAI_API_KEY and OPENAI_BASE_URL were sourced strictly from the
+# environment (with https://api.core42.ai/v1 as the documented fallback
+# for OPENAI_BASE_URL). The API key itself is NEVER printed (not even
+# masked) — only its presence status and source are logged.
+logger.info(
+    "OPENAI_API_KEY: %s (source=%s)",
+    _api_key_status(config.OPENAI_API_KEY),
+    config.OPENAI_API_KEY_SOURCE,
+)
+logger.info(
+    "LLM config: base_url=%s (source=%s) chat=%s reasoning=%s llm_enabled=%s",
+    config.OPENAI_BASE_URL,
+    config.OPENAI_BASE_URL_SOURCE,
+    config.COMPASS_CHAT_MODEL,
+    config.COMPASS_REASONING_MODEL,
+    config.llm_enabled,
+)
+
+# Validate critical settings (fails fast in production)
+config.validate()
+
+# Ensure required directories exist
+os.makedirs(os.path.dirname(config.LOG_FILE) or "logs", exist_ok=True)
 os.makedirs("data/uploads", exist_ok=True)
 
-# Initialize workflow orchestrator
+# Initialize workflow orchestrator (singleton)
 orchestrator = WorkflowOrchestrator()
-user_interaction_history: list[Dict[str, Any]] = []
 
 
 # Request/Response Models
 class AnalysisRequest(BaseModel):
     """Request for analysis"""
 
+    use_case_id: Optional[int] = None  # client-supplied tracking ID echoed back in the response
     well_name: str
     analysis_type: str = "full"  # 'full' or 'quick'
     seismic_data: Optional[Dict[str, Any]] = None
@@ -54,6 +84,7 @@ class AnalysisRequest(BaseModel):
 class AnalysisResponse(BaseModel):
     """Response for analysis"""
 
+    use_case_id: Optional[int] = None  # echoed back from the request for tracking
     workflow_id: str
     status: str
     results: Dict[str, Any]
@@ -76,13 +107,6 @@ class WorkflowHistoryResponse(BaseModel):
     recent_workflows: list
 
 
-class UserInteractionHistoryResponse(BaseModel):
-    """User interaction history response"""
-
-    total_interactions: int
-    recent_interactions: list
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle management"""
@@ -97,38 +121,94 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Oil & Gas Analytics Multi-Agent System",
     description="Production-ready multi-agent AI system for oil & gas exploration and analysis",
-    version="1.0.0",
+    version=__version__,
     lifespan=lifespan,
+    docs_url="/docs" if config.DEBUG else None,
+    redoc_url="/redoc" if config.DEBUG else None,
 )
 
-# Add CORS middleware
+# CORS - explicit allow-list from environment (CORS_ORIGINS)
+allow_origins = config.CORS_ORIGINS or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=allow_origins,
+    allow_credentials=allow_origins != ["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+
+@app.middleware("http")
+async def request_context_middleware(request: Request, call_next):
+    """Attach a request ID and basic access log to every response."""
+    request_id = request.headers.get("X-Request-ID", uuid.uuid4().hex)
+    set_context(request_id=request_id, path=request.url.path, method=request.method)
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception("Unhandled error rid=%s path=%s", request_id, request.url.path)
+        clear_context("request_id", "path", "method")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "internal_server_error", "request_id": request_id},
+        )
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Response-Time-ms"] = str(duration_ms)
+    logger.info(
+        "request_completed",
+        extra={
+            "status_code": response.status_code,
+            "duration_ms": duration_ms,
+        },
+    )
+    clear_context("request_id", "path", "method")
+    return response
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.detail, "status_code": exc.status_code},
+    )
 
 
 # Health and Info Endpoints
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Health check endpoint"""
+    """Liveness probe - process is up."""
     return {
         "status": "healthy",
-        "version": "1.0.0",
+        "version": __version__,
         "timestamp": datetime.now().isoformat(),
-        "agents_available": 5,
+        "agents_available": len(orchestrator.manager.agents) if hasattr(orchestrator, "manager") else 5,
     }
+
+
+@app.get("/readyz")
+async def readiness_check():
+    """Readiness probe - validates downstream dependencies."""
+    ready = config.llm_enabled
+    return JSONResponse(
+        status_code=200 if ready else 503,
+        content={
+            "ready": ready,
+            "llm_enabled": config.llm_enabled,
+            "timestamp": datetime.now().isoformat(),
+        },
+    )
 
 
 @app.get("/info")
 async def get_info():
-    """Get system information"""
+    """Get system information (secrets redacted)."""
     return {
         "system_name": "Oil & Gas Analytics Multi-Agent System",
-        "version": "1.0.0",
+        "version": __version__,
+        "config": config.safe_dict(),
         "agents": {
             "planner": "Dynamically delegates specialists and revision cycles",
             "research_agent": "Loads local evidence and recommends SEG/SEAM open data",
@@ -139,14 +219,6 @@ async def get_info():
             "evaluator": "Critiques outputs and requests retries when evidence is weak",
             "report_generator": "Generates comprehensive reports",
         },
-        "api_port": config.API_PORT,
-        "ui_port": config.UI_PORT,
-        "models": {
-            "primary_text_generation": config.OPENAI_PRIMARY_MODEL,
-            "advanced_reasoning": config.OPENAI_REASONING_MODEL,
-            "embeddings": config.OPENAI_EMBEDDING_MODEL,
-            "speech_to_text": config.OPENAI_TRANSCRIPTION_MODEL,
-        },
         "capabilities": [
             "Seismic interpretation",
             "Well log analysis",
@@ -154,9 +226,6 @@ async def get_info():
             "Risk assessment",
             "Volumetric calculation",
             "Report generation",
-            "Role-specific OpenAI model routing",
-            "Embedding model configuration for RAG and semantic search",
-            "Whisper model configuration for speech-to-text",
             "Planner-executor-evaluator retry loops",
             "Shared memory and collaboration logs",
             "Local CSV evidence loading and SEG open-data guidance",
@@ -165,7 +234,15 @@ async def get_info():
 
 
 # Analysis Endpoints
-@app.post("/analyze", response_model=AnalysisResponse)
+# ``/run`` is the canonical path (preferred by CLI and run_ui.py).
+# ``/analyze`` is kept as a deprecated alias for backward compatibility.
+@app.post("/run", response_model=AnalysisResponse, tags=["analysis"])
+@app.post(
+    "/analyze",
+    response_model=AnalysisResponse,
+    tags=["analysis"],
+    deprecated=True,
+)
 async def analyze(request: AnalysisRequest, background_tasks: BackgroundTasks):
     """
     Execute multi-agent analysis on provided data
@@ -178,10 +255,15 @@ async def analyze(request: AnalysisRequest, background_tasks: BackgroundTasks):
         Analysis results with workflow ID
     """
     try:
-        logger.info(f"Received analysis request for {request.well_name}")
+        logger.info(
+            "Received analysis request for %s (use_case_id=%s)",
+            request.well_name,
+            request.use_case_id,
+        )
 
         # Prepare input data
         user_input = {
+            "use_case_id": request.use_case_id,
             "well_name": request.well_name,
             "seismic_data": request.seismic_data or {},
             "well_log_data": request.well_log_data or {},
@@ -197,20 +279,19 @@ async def analyze(request: AnalysisRequest, background_tasks: BackgroundTasks):
         else:
             result = orchestrator.execute_full_analysis(user_input)
 
+        # Make sure the workflow result also carries the use_case_id so the
+        # nested ``results`` block matches the saved output_examples/*.json
+        # snapshots ("use_case_id" appears at the top of those files too).
+        if isinstance(result, dict) and request.use_case_id is not None:
+            result.setdefault("use_case_id", request.use_case_id)
+
         # Log to file
         background_tasks.add_task(
             log_analysis_result, result, request.well_name
         )
-        request_payload = request.model_dump()
-        interaction_entry = build_user_interaction_entry(request_payload, result)
-        user_interaction_history.append(interaction_entry)
-        background_tasks.add_task(
-            log_user_interaction,
-            request_payload,
-            result,
-        )
 
         return {
+            "use_case_id": request.use_case_id,
             "workflow_id": result.get("workflow_id"),
             "status": result.get("status"),
             "results": result,
@@ -222,7 +303,8 @@ async def analyze(request: AnalysisRequest, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/analyze/batch")
+@app.post("/run/batch", tags=["analysis"])
+@app.post("/analyze/batch", tags=["analysis"], deprecated=True)
 async def analyze_batch(wells_data: list[Dict[str, Any]]):
     """
     Execute analysis on multiple wells
@@ -238,17 +320,6 @@ async def analyze_batch(wells_data: list[Dict[str, Any]]):
         for well_data in wells_data:
             result = orchestrator.execute_full_analysis(well_data)
             results.append(result)
-            interaction_entry = build_user_interaction_entry(
-                request_payload=well_data,
-                result=result,
-                endpoint="/analyze/batch",
-            )
-            user_interaction_history.append(interaction_entry)
-            log_user_interaction(
-                request_payload=well_data,
-                result=result,
-                endpoint="/analyze/batch",
-            )
 
         return {
             "status": "success",
@@ -283,30 +354,6 @@ async def clear_workflow_history():
     """Clear workflow execution history"""
     orchestrator.clear_history()
     return {"status": "success", "message": "History cleared"}
-
-
-@app.get("/interactions/history", response_model=UserInteractionHistoryResponse)
-async def get_user_interaction_history(limit: int = 20):
-    """Get recent user interaction history."""
-
-    return {
-        "total_interactions": len(user_interaction_history),
-        "recent_interactions": user_interaction_history[-limit:],
-    }
-
-
-@app.delete("/interactions/history")
-async def clear_user_interaction_history():
-    """Clear user interaction history (memory and persisted file)."""
-
-    user_interaction_history.clear()
-    try:
-        if os.path.exists(config.USER_INTERACTION_LOG_FILE):
-            os.remove(config.USER_INTERACTION_LOG_FILE)
-    except Exception as exc:
-        logger.error(f"Failed to clear user interaction logs: {str(exc)}")
-        raise HTTPException(status_code=500, detail="Failed to clear interaction history")
-    return {"status": "success", "message": "User interaction history cleared"}
 
 
 # Tool Endpoints
@@ -392,206 +439,25 @@ async def execute_tool(tool_name: str, data: Dict[str, Any]):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Visualization Endpoints
-@app.post("/visualize/well-log")
-async def visualize_well_log(request: Dict[str, Any]):
-    """Generate well log visualization."""
-    try:
-        from app.visualizations import WellLogVisualizer
-        import base64
-        import io
-        
-        fig = WellLogVisualizer.create_well_log_track(request)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        image_base64 = base64.b64encode(buffer.read()).decode()
-        buffer.close()
-        
-        import matplotlib.pyplot as plt
-        plt.close(fig)
-        
-        return {
-            "status": "success",
-            "visualization": "well_log",
-            "image_base64": image_base64,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        logger.error(f"Well log visualization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/visualize/seismic")
-async def visualize_seismic(request: Dict[str, Any]):
-    """Generate seismic section visualization."""
-    try:
-        from app.visualizations import SeismicVisualizer
-        import base64
-        import io
-        
-        fig = SeismicVisualizer.create_seismic_section(request)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        image_base64 = base64.b64encode(buffer.read()).decode()
-        buffer.close()
-        
-        import matplotlib.pyplot as plt
-        plt.close(fig)
-        
-        return {
-            "status": "success",
-            "visualization": "seismic_section",
-            "image_base64": image_base64,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        logger.error(f"Seismic visualization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/visualize/faults")
-async def visualize_faults(request: Dict[str, Any]):
-    """Generate fault detection visualization."""
-    try:
-        from app.visualizations import SeismicVisualizer
-        import base64
-        import io
-        
-        faults = request.get('faults', [])
-        fig = SeismicVisualizer.create_fault_detection_map(faults)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        image_base64 = base64.b64encode(buffer.read()).decode()
-        buffer.close()
-        
-        import matplotlib.pyplot as plt
-        plt.close(fig)
-        
-        return {
-            "status": "success",
-            "visualization": "fault_detection",
-            "image_base64": image_base64,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        logger.error(f"Fault visualization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/visualize/reservoir")
-async def visualize_reservoir(request: Dict[str, Any]):
-    """Generate reservoir properties visualization."""
-    try:
-        from app.visualizations import ReservoirVisualizer
-        import base64
-        import io
-        
-        fig = ReservoirVisualizer.create_reservoir_properties_panel(request)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        image_base64 = base64.b64encode(buffer.read()).decode()
-        buffer.close()
-        
-        import matplotlib.pyplot as plt
-        plt.close(fig)
-        
-        return {
-            "status": "success",
-            "visualization": "reservoir_properties",
-            "image_base64": image_base64,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        logger.error(f"Reservoir visualization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/visualize/risk")
-async def visualize_risk(request: Dict[str, Any]):
-    """Generate risk assessment visualization."""
-    try:
-        from app.visualizations import RiskAssessmentVisualizer
-        import base64
-        import io
-        
-        fig = RiskAssessmentVisualizer.create_risk_dashboard(request)
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-        buffer.seek(0)
-        image_base64 = base64.b64encode(buffer.read()).decode()
-        buffer.close()
-        
-        import matplotlib.pyplot as plt
-        plt.close(fig)
-        
-        return {
-            "status": "success",
-            "visualization": "risk_dashboard",
-            "image_base64": image_base64,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        logger.error(f"Risk visualization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/visualize/examples")
-async def list_visualization_examples():
-    """List available visualization examples."""
-    return {
-        "status": "success",
-        "visualizations": {
-            "well_log": {
-                "endpoint": "POST /visualize/well-log",
-                "description": "Well log track with gamma ray, resistivity, porosity, and lithology",
-                "example_fields": ["depth_values", "gamma_ray", "resistivity", "porosity", "lithology_classification"]
-            },
-            "seismic_section": {
-                "endpoint": "POST /visualize/seismic",
-                "description": "Seismic section with amplitude envelope",
-                "example_fields": ["amplitude_values", "depth_values"]
-            },
-            "fault_detection": {
-                "endpoint": "POST /visualize/faults",
-                "description": "Detected fault structures with throw and confidence",
-                "example_fields": ["faults: [{depth, throw_m, confidence}, ...]"]
-            },
-            "reservoir": {
-                "endpoint": "POST /visualize/reservoir",
-                "description": "Multi-panel reservoir properties (permeability, saturation, pressure)",
-                "example_fields": ["depth_values", "permeability_md", "oil_saturation", "water_saturation", "gas_saturation", "formation_pressure_psi"]
-            },
-            "risk_dashboard": {
-                "endpoint": "POST /visualize/risk",
-                "description": "Risk assessment dashboard with scores and metrics",
-                "example_fields": ["overall_risk_score", "risk_components", "volumetric_estimates", "trap_assessment", "drilling_risks"]
-            }
-        },
-        "note": "All visualization endpoints return base64-encoded PNG images"
-    }
-
-
 # Data Upload Endpoints
+def _safe_filename(name: str) -> str:
+    base = os.path.basename(name or "")
+    return "".join(c for c in base if c.isalnum() or c in (".", "_", "-"))[:200] or "upload"
+
+
+async def _read_capped(file: UploadFile) -> bytes:
+    contents = await file.read()
+    if len(contents) > config.MAX_REQUEST_BYTES:
+        raise HTTPException(status_code=413, detail="File too large")
+    return contents
+
+
 @app.post("/upload/seismic")
 async def upload_seismic_data(file: UploadFile = File(...)):
     """Upload seismic data file (CSV)"""
     try:
-        contents = await file.read()
-        filename = f"seismic_{datetime.now().timestamp()}.csv"
+        contents = await _read_capped(file)
+        filename = f"seismic_{int(datetime.now().timestamp())}_{_safe_filename(file.filename or '')}.csv"
         filepath = os.path.join("data/uploads", filename)
 
         with open(filepath, "wb") as f:
@@ -603,7 +469,10 @@ async def upload_seismic_data(file: UploadFile = File(...)):
             "size": len(contents),
             "path": filepath,
         }
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.exception("Seismic upload failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -611,8 +480,8 @@ async def upload_seismic_data(file: UploadFile = File(...)):
 async def upload_well_log_data(file: UploadFile = File(...)):
     """Upload well log data file (LAS or CSV)"""
     try:
-        contents = await file.read()
-        filename = f"welllog_{datetime.now().timestamp()}_{file.filename}"
+        contents = await _read_capped(file)
+        filename = f"welllog_{int(datetime.now().timestamp())}_{_safe_filename(file.filename or '')}"
         filepath = os.path.join("data/uploads", filename)
 
         with open(filepath, "wb") as f:
@@ -624,7 +493,10 @@ async def upload_well_log_data(file: UploadFile = File(...)):
             "size": len(contents),
             "path": filepath,
         }
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.exception("Well-log upload failed")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -632,78 +504,28 @@ async def upload_well_log_data(file: UploadFile = File(...)):
 def log_analysis_result(result: Dict[str, Any], well_name: str):
     """Log analysis result to file"""
     try:
-        agent_logs = result.get("agent_logs", [])
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "well_name": well_name,
+            "workflow_id": result.get("workflow_id"),
+            "status": result.get("status"),
+            "summary": {
+                "seismic": result.get("seismic_analysis", {}).get("status"),
+                "well_logs": result.get("well_log_analysis", {}).get("status"),
+                "reservoir": result.get("reservoir_analysis", {}).get("status"),
+                "risk": result.get("risk_assessment", {}).get("status"),
+            },
+            "collaboration": {
+                "agents_executed": result.get("agents_executed", []),
+                "planner_delegation": result.get("planner_delegation", []),
+                "evaluation": result.get("evaluation", {}),
+            },
+        }
+
         with open(config.LOG_FILE, "a") as f:
-            if isinstance(agent_logs, list) and agent_logs:
-                for event in agent_logs:
-                    normalized_event = {
-                        "timestamp": event.get("timestamp", datetime.utcnow().replace(microsecond=0).isoformat() + "Z"),
-                        "agent_name": event.get("agent_name", "unknown"),
-                        "action": event.get("action", "unknown_action"),
-                        "input_summary": event.get("input_summary", ""),
-                        "output_summary": event.get("output_summary", ""),
-                        "target_agent": event.get("target_agent", ""),
-                        "confidence": event.get("confidence", 0.0),
-                        "retry_count": event.get("retry_count", 0),
-                        "status": event.get("status", "unknown"),
-                    }
-                    f.write(json.dumps(normalized_event) + "\n")
-            else:
-                # Backward-compatible fallback when old workflow payload is supplied.
-                fallback_event = {
-                    "timestamp": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-                    "agent_name": "WorkflowOrchestrator",
-                    "action": "analysis_completed",
-                    "input_summary": f"Processed workflow for well '{well_name}'",
-                    "output_summary": f"Workflow status: {result.get('status', 'unknown')}",
-                    "target_agent": "api_response",
-                    "confidence": 0.7,
-                    "retry_count": 0,
-                    "status": "success" if result.get("status") in {"success", "partial"} else "error",
-                }
-                f.write(json.dumps(fallback_event) + "\n")
+            f.write(json.dumps(log_entry) + "\n")
     except Exception as e:
         logger.error(f"Failed to log analysis result: {str(e)}")
-
-
-def build_user_interaction_entry(
-    request_payload: Dict[str, Any],
-    result: Dict[str, Any],
-    endpoint: str = "/analyze",
-) -> Dict[str, Any]:
-    """Build a compact interaction-history record."""
-
-    return {
-        "timestamp": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-        "endpoint": endpoint,
-        "well_name": request_payload.get("well_name", "unknown"),
-        "analysis_type": request_payload.get("analysis_type", "full"),
-        "workflow_id": result.get("workflow_id"),
-        "status": result.get("status", "unknown"),
-        "agents_executed": result.get("agents_executed", []),
-        "planner_delegation": result.get("planner_delegation", []),
-        "has_user_notes": bool(request_payload.get("user_notes")),
-        "error": result.get("error"),
-    }
-
-
-def log_user_interaction(
-    request_payload: Dict[str, Any],
-    result: Dict[str, Any],
-    endpoint: str = "/analyze",
-):
-    """Persist user interaction records into JSONL log."""
-
-    try:
-        interaction_entry = build_user_interaction_entry(
-            request_payload=request_payload,
-            result=result,
-            endpoint=endpoint,
-        )
-        with open(config.USER_INTERACTION_LOG_FILE, "a") as f:
-            f.write(json.dumps(interaction_entry) + "\n")
-    except Exception as exc:
-        logger.error(f"Failed to log user interaction: {str(exc)}")
 
 
 @app.get("/logs/download")
@@ -719,18 +541,72 @@ async def download_logs():
     )
 
 
+# ---------------------------------------------------------------------------
+# RAG, persistent memory and observability endpoints
+# ---------------------------------------------------------------------------
+@app.get("/rag/status")
+async def rag_status():
+    """Return current RAG index status."""
+    return rag_module.status()
+
+
+@app.post("/rag/build")
+async def rag_build(force: bool = False):
+    """Build/rebuild the RAG index. Requires OPENAI_API_KEY for embeddings."""
+    try:
+        chunks = rag_module.build_index(force=force)
+        return {"status": "ok", "chunks": chunks, **rag_module.status()}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/rag/search")
+async def rag_search(q: str, k: int = 4):
+    """Search the RAG index for relevant chunks."""
+    if not q.strip():
+        raise HTTPException(status_code=400, detail="Query 'q' must not be empty")
+    return {"query": q, "results": rag_module.retrieve(q, k=k)}
+
+
+@app.get("/memory/{key}")
+async def get_memory(key: str, limit: int = 5):
+    """Return persisted prior-run memory for a well/asset key."""
+    entries = memory_module.recall({"well_name": key}, limit=limit)
+    return {"key": key, "entries": entries, "count": len(entries)}
+
+
+@app.get("/events/tail")
+async def events_tail(n: int = 50):
+    """Tail the structured observability event log (JSONL)."""
+    path = os.getenv("OBS_EVENT_FILE", "logs/events.jsonl")
+    if not os.path.exists(path):
+        return {"events": [], "file": path}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.readlines()[-max(1, min(n, 1000)) :]
+        events = []
+        for line in lines:
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        return {"events": events, "file": path, "count": len(events)}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 # Root endpoint
 @app.get("/")
 async def root():
     """Root endpoint with API documentation"""
     return {
         "message": "Oil & Gas Analytics Multi-Agent System",
-        "version": "1.0.0",
+        "version": __version__,
         "documentation": "/docs",
         "quick_start": {
             "1_check_health": "/health",
             "2_view_info": "/info",
-            "3_submit_analysis": "POST /analyze",
+            "3_submit_analysis": "POST /run (alias: POST /analyze, deprecated)",
             "4_view_history": "/workflows/history",
         },
         "api_port": config.API_PORT,
@@ -742,8 +618,11 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        app,
+        "run:app",
         host=config.HOST,
         port=config.API_PORT,
         log_level=config.LOG_LEVEL.lower(),
+        reload=config.DEBUG and not config.is_production,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )
