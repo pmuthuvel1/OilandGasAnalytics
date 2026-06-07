@@ -1,158 +1,136 @@
-# HTTP API reference
+# Architecture
+a worker thread when needed.
+we're already inside an event loop (e.g. inside FastAPI) and offloads to
+`asyncio.gather`; dependent ones chain. The sync wrapper detects whether
+`exploration_risk_assessor`). Independent agents run concurrently via
+`well_log_interpreter`) from dependent ones (`reservoir_characterizer`,
+`_run_agents_parallel` separates independent specialists (`seismic_analyzer`,
 
-> Default base URL: `http://localhost:8000`. Set `API_BASE_URL` and `HOST`
-> in `.env` to change. The dashboard UI proxies these endpoints from
-> `:8001`.
+## Async parallelism
 
-All POSTs accept and return JSON. Every response carries an `X-Request-ID`
-header. When `JSON_LOGS=true`, the same id appears in the process logs.
+the final summary under `escalation`.
+outputs instead of cascading errors. The escalation status is surfaced in
+deterministic skip notice. The workflow keeps producing tool-grounded
+`_llm_escalated=True`, and subsequent calls short-circuit with a
+failed LLM calls (`_llm_failure_threshold`), the manager flips
+`_invoke_reasoning_llm` keeps a failure streak. After three consecutive
 
-## Health & introspection
+## Escalation (live API → sample mode)
 
-### `GET /health`
+the planner then loops, the retriever broadens, specialists re-run.
+when missing evidence, weak outputs, or quality < threshold are detected;
+The evaluator can **block** the report writer via `report_gate.may_publish`
 
-Liveness probe. Always returns 200 once the process is up.
+   (retry the retriever with broader query variants).
+3. **RAG coverage** — `weak` or `empty` triggers `_broaden_retrieval`
+   flagged weak outputs, HIGH risk, or quality < threshold.
+2. **Prior evaluation** — `force_risk` is set when the last critique
+   `state.analysis_results` decides which specialists to delegate.
+1. **Available evidence** — which keys are present in `user_input` and
 
-```json
-{
-  "status": "healthy",
-  "version": "1.1.0",
-  "timestamp": "2026-06-05T07:21:00.123Z",
-  "agents_available": 5
-}
+The planner branches on three signals:
+
+## Non-linear control flow
+
+| Petrophysics    | `app/petrophysics.py` (LAS-driven physics tools)               |
+| Process logs    | `app/logging_config.py` (JSON-lines in production)             |
+| Per-run trace   | `app/logging_utils.py` (`logs/agent_trace_*.jsonl`)            |
+| Observability   | `app/observability.py` (JSONL events + optional OTel spans)    |
+| RAG             | `app/rag.py` (Compass embeddings → on-disk vectors)            |
+| Persistent mem  | `app/memory.py` (`logs/persistent_memory.json`)                |
+| Configuration   | `app/config.py` (env-driven, `.env` for dev, `safe_dict()` for `/info`) |
+| --------------- | -------------------------------------------------------------- |
+| Concern         | Where                                                          |
+
+### 4. Cross-cutting
+
+regardless of LLM availability — they are the ground truth.
+reservoir, and risk analytics. Tools are the only path that *always* runs,
+`app/tools.py` registers ~15 deterministic functions for seismic, well-log,
+
+### 3. Tools layer
+
+8. Workflow summary is persisted to memory + emitted as `workflow.end`.
+7. **Report Writer** synthesizes (or is blocked).
+6. Loop steps 3–5 up to `max_review_cycles` (default 2).
+   `report_gate` that the Report Writer must respect.
+5. **Evaluator**: scores quality, captures missing evidence, sets a
+   `SAMPLE_MODE=true` or no API key).
+   asks the LLM to synthesize (or falls back to deterministic output if
+4. **Specialists**: each agent calls its registered tools first, then
+   safe), and asks the retriever to broaden if RAG coverage is weak.
+3. **Planner**: chooses which specialists to delegate (parallel where
+   relevant doc chunks, recalls persistent memory.
+2. **Research + RAG**: loads any local CSVs / LAS bundles, retrieves
+1. Boots a fresh `AgentState` and a per-run trace file (`new_trace_file`).
+
+(`app/agents.py`) implement the non-linear collaboration. Each run:
+`WorkflowOrchestrator` (`app/workflows.py`) and `AgentExecutorManager`
+
+### 2. Orchestration layer
+
+|             |               | `info`, `examples`, `regen-outputs`.                 |
+| CLI         | `cli.py`      | argparse driver: `analyze`, `batch`, `tools`,        |
+| Dashboard   | `run_ui.py`   | Embedded HTML UI on `:8001` (calls back into API).   |
+|             |               | gzip, structured logs, batch / single analyze.       |
+| HTTP API    | `run.py`      | FastAPI app on `:8000`; request middleware, CORS,    |
+| ----------- | ------------- | ---------------------------------------------------- |
+| Component   | File          | Purpose                                              |
+
+### 1. Surface layer
+
+## Layers
+
+```
+           └──────────────────────────────────────────────────┘
+           │   logs/events.jsonl   logs/persistent_memory.json│
+           │   logs/agent_trace_<ts>_run_<id>.jsonl           │
+           ┌──────────────────────────────────────────────────┐
+                                         ▼
+                                         │
+            └──────────────────────────────────────────────────────┘
+            │              └────────────────────────┘              │
+            │              │   Report Generator     │              │
+            │              ┌────────────────────────┐              │
+            │                           ▼                          │
+            │           approve ────────┤──── request_revision     │
+            │                           │                          │
+            │  └────────────────────────┬────────────────────────┘ │
+            │  │  Evaluator (critique + quality gate)            │ │
+            │  ┌─────────────────────────────────────────────────┐ │
+            │                                                      │
+            │            (tool registry — app/tools.py)            │
+            │        ▼              ▼              ▼               │
+            │        │              │              │               │
+            │  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘        │
+            │  │ Analyzer   │ │ Interpreter│ │ Character. │        │
+            │  │  Seismic   │ │  Well Log  │ │ Reservoir  │  ...   │
+            │  ┌────────────┐ ┌────────────┐ ┌────────────┐        │
+            │       ▼                                              │
+            │       │ delegate (parallel where independent)        │
+            │       │                            └────────────┘    │
+            │  └────┬───────┘   └────────────┘   │   Memory   │    │
+            │  │  Planner   │──▶│  Research  │──▶│   RAG +    │    │
+            │  ┌────────────┐   ┌────────────┐   ┌────────────┐    │
+            │                                                      │
+            │           (app/agents.py)                            │
+            │           AgentExecutorManager                       │
+            ┌──────────────────────────────────────────────────────┐
+                                         ▼
+                                         │
+                       └─────────────────┬────────────────┘
+                       │     (app/workflows.py)           │
+                       │     WorkflowOrchestrator         │
+                       ┌──────────────────────────────────┐
+                                           ▼
+                                           │
+                            └──────────────┬───────────┘
+                            │    run_ui.py)            │
+                            │   (run.py / cli.py /     │
+                            │   FastAPI / CLI / UI     │
+                            ┌──────────────────────────┐
 ```
 
-### `GET /readyz`
+> A deployable, observable multi-agent stack for subsurface analytics.
 
-Readiness probe. Returns 200 only when an LLM API key is configured (or
-`SAMPLE_MODE=true`).
-
-### `GET /info`
-
-System + configuration snapshot (secrets are redacted). Use this from
-operators / admin UIs to verify which models are wired up.
-
-## Analysis
-
-### `POST /analyze`
-
-Body fields:
-
-| Field                 | Type            | Required | Notes                                    |
-| --------------------- | --------------- | -------- | ---------------------------------------- |
-| `well_name`           | string          | yes      | Used for memory key                      |
-| `analysis_type`       | `"full"`/`"quick"` | no    | Defaults to `"full"`                     |
-| `seismic_data`        | object          | no       | Inline arrays (see input examples)       |
-| `well_log_data`       | object          | no       | Inline arrays                            |
-| `seismic_csv_path`    | string          | no       | Path under `DATA_PATH`                   |
-| `well_log_csv_path`   | string          | no       | Path under `DATA_PATH`                   |
-| `seam_well_number`    | int             | no       | For SEAM LAS bundle                      |
-| `user_notes`          | string          | no       | Free-form context                        |
-
-Returns:
-
-```json
-{
-  "workflow_id": "2026-06-05T07:21:00.123Z",
-  "status": "success" | "partial" | "blocked" | "error",
-  "results": { ... full orchestrator summary ... },
-  "timestamp": "..."
-}
-```
-
-The `results` block contains `planner_delegation`, `findings` per agent,
-`evaluation` (quality + report gate), `collaboration_log`, `trace_id`,
-`escalation`, and a flat `seismic_analysis`/`well_log_analysis`/etc.
-mirror for convenient consumption.
-
-### `POST /analyze/batch`
-
-Accepts a JSON list of well payloads, runs each through the full workflow.
-
-```bash
-curl -X POST http://localhost:8000/analyze/batch \
-  -H 'content-type: application/json' \
-  -d '[ {"well_name":"A","well_log_data":{...}}, {"well_name":"B","...":"..."} ]'
-```
-
-### `GET /workflows/history?limit=10`
-
-Returns the last `limit` orchestrator runs from the in-process history.
-
-### `DELETE /workflows/history`
-
-Clears the in-process history (does not touch persistent memory).
-
-## Tools
-
-### `GET /tools`
-
-Lists all registered tools and their category buckets.
-
-### `POST /tools/{tool_name}`
-
-Calls a tool directly. The body is the tool's payload (same shape as the
-deterministic tools in `app/tools.py`).
-
-```bash
-curl -X POST http://localhost:8000/tools/analyze_seismic_amplitude \
-  -H 'content-type: application/json' \
-  -d '{"depth_values":[1,2,3],"amplitude_values":[0.5,1.2,2.3]}'
-```
-
-## Data uploads
-
-### `POST /upload/seismic` and `POST /upload/well-log`
-
-Multipart uploads. Files are saved to `data/uploads/<timestamp>_<safe-name>`.
-Maximum size is `MAX_REQUEST_BYTES` (10 MB by default).
-
-### `GET /data/open-sources`
-
-Returns the static SEG/SEAM open-data catalog used by the Research Agent.
-
-## RAG
-
-### `GET /rag/status`
-
-Returns `{loaded, chunks, index_file}`.
-
-### `POST /rag/build?force=true`
-
-Forces a rebuild of the on-disk RAG index (requires embeddings, i.e. an
-API key — unless an existing index can be loaded from disk).
-
-### `GET /rag/search?q=<query>&k=4`
-
-Top-k hits with score + snippet.
-
-## Memory & observability
-
-### `GET /memory/{key}?limit=5`
-
-Recall up to `limit` prior workflow summaries for a well/asset key.
-
-### `GET /events/tail?n=50`
-
-Tail the JSONL observability log (`OBS_EVENT_FILE`, default
-`logs/events.jsonl`).
-
-### `GET /logs/download`
-
-Download `LOG_FILE` (the per-request analysis log, default
-`logs/agent_logs.json`).
-
-## Error responses
-
-```json
-{
-  "error": "internal_server_error",
-  "request_id": "<uuid>"
-}
-```
-
-400 errors caused by Compass / Azure HTTP quirks (e.g. extra fields) are
-caught inside the agent layer and surfaced via the `result.llm_error`
-field in the workflow summary, **not** as a 5xx — so the workflow keeps
-returning useful tool output even when the LLM endpoint misbehaves.
 
