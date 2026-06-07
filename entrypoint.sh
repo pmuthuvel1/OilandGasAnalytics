@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Oil & Gas Analytics Multi-Agent System Entry Point
 # Starts both API (8000) and UI (8003, legacy run_ui_old.py) services with
 # proper signal handling.
@@ -20,7 +20,9 @@ SAMPLE_MODE="${SAMPLE_MODE:-false}"
 echo "Starting Oil & Gas Analytics System (APP_ENV=${APP_ENV})..."
 
 # In production we REQUIRE an API key, unless explicitly running in sample mode.
-if [ "${APP_ENV}" = "production" ] && [ "${SAMPLE_MODE,,}" != "true" ]; then
+# Convert SAMPLE_MODE to lowercase for case-insensitive comparison
+lowercase_sample_mode=$(echo "$SAMPLE_MODE" | tr '[:upper:]' '[:lower:]')
+if [ "${APP_ENV}" = "production" ] && [ "${lowercase_sample_mode}" != "true" ]; then
     if [ -z "${OPENAI_API_KEY:-}" ]; then
         echo "ERROR: OPENAI_API_KEY environment variable is not set!" >&2
         echo "Set it via -e OPENAI_API_KEY=... or --env-file, or run with SAMPLE_MODE=true." >&2
@@ -89,4 +91,3 @@ EXIT_CODE=$?
 set -e
 term_handler
 exit "${EXIT_CODE}"
-
