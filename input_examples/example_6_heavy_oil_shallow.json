@@ -1,4 +1,5 @@
 {
+  "use_case_id": 4,
   "well_name": "Heavy-Oil-Shallow-006",
   "analysis_type": "full",
   "trap_type": "structural",
@@ -8,22 +9,87 @@
   "quality_threshold": 0.5,
   "seismic_data": {
     "well_name": "Heavy-Oil-Shallow-006",
-    "depth_values": [800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700],
-    "amplitude_values": [0.6, 1.3, 1.8, 2.4, 3.5, 4.1, 3.2, 1.9, 1.1, 0.7],
+    "depth_values": [
+      800,
+      900,
+      1000,
+      1100,
+      1200,
+      1300,
+      1400,
+      1500,
+      1600,
+      1700
+    ],
+    "amplitude_values": [
+      0.6,
+      1.3,
+      1.8,
+      2.4,
+      3.5,
+      4.1,
+      3.2,
+      1.9,
+      1.1,
+      0.7
+    ],
     "frequency_content": {
       "low_freq_10_20Hz": 0.18,
       "mid_freq_20_50Hz": 0.62,
-      "high_freq_50_100Hz": 0.20
+      "high_freq_50_100Hz": 0.2
     }
   },
   "well_log_data": {
     "well_name": "Heavy-Oil-Shallow-006",
-    "depth_values": [1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550],
-    "gamma_ray": [55, 52, 58, 50, 48, 53, 60, 65, 95, 110],
-    "resistivity": [38, 42, 45, 50, 55, 48, 40, 35, 18, 12],
-    "porosity": [32, 34, 33, 35, 36, 34, 31, 28, 18, 9],
+    "depth_values": [
+      1100,
+      1150,
+      1200,
+      1250,
+      1300,
+      1350,
+      1400,
+      1450,
+      1500,
+      1550
+    ],
+    "gamma_ray": [
+      55,
+      52,
+      58,
+      50,
+      48,
+      53,
+      60,
+      65,
+      95,
+      110
+    ],
+    "resistivity": [
+      38,
+      42,
+      45,
+      50,
+      55,
+      48,
+      40,
+      35,
+      18,
+      12
+    ],
+    "porosity": [
+      32,
+      34,
+      33,
+      35,
+      36,
+      34,
+      31,
+      28,
+      18,
+      9
+    ],
     "depth_unit": "feet"
   },
   "user_notes": "Unconsolidated shallow heavy-oil sand. Bitumen-grade fluid viscosity, will likely need thermal recovery (SAGD). Sand control critical; cap rock thin at ~1500ft."
 }
-
