@@ -45,10 +45,12 @@ If `len: 0`, fix one of:
 2. Export in your shell: `export OPENAI_API_KEY=sk-...`
 3. Run in sample mode: `export SAMPLE_MODE=true`
 
-The UI server also prints a masked key at startup
-(`OPENAI_API_KEY = abcd...wxyz (len=...)`). Set
-`DEBUG_PRINT_API_KEY=true` only when you're debugging — it logs the raw
-value.
+The UI and API servers print a presence-only status at startup
+(`OPENAI_API_KEY: configured (source=env)` or
+`OPENAI_API_KEY: not configured (source=missing)`). The key value itself
+— including any masked prefix/suffix or length — is **never** written to
+logs. To verify the loaded key from a shell, use the `python -c` snippet
+above (it prints the length to your terminal only, not to the app logs).
 
 ## 3. `python run_ui.py` warns: `You must pass the application as an import string`
 
