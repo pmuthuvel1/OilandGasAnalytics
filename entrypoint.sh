@@ -78,7 +78,7 @@ else
 fi
 API_PID=$!
 
-# Start UI - using run_ui.py (not run_ui_old.py)
+# Start UI - using run_ui.py 
 UI_PORT="${UI_PORT}" python run_ui.py &
 UI_PID=$!
 
