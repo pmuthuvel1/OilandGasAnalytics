@@ -33,16 +33,16 @@ escalation.
 ## Problem Statement
 
 **Use Case ID:** 4
-**Problem:** Oil and Gas Seismic Data and Well Information Analyser for drilling.
+**Problem:** Oil & Gas Seismic Data and Well Information Analyser for drilling.
 
-Subsurface teams routinely need to fuse seismic amplitude/horizon evidence
+Subsurface teams routinely need to fuse seismic amplitude / horizon evidence
 with well-log petrophysics, layer in reservoir-quality and risk reasoning,
-and finally produce a defensible **drill / marginal / do-not-drill** call.
+and finally produce a defensible **DRILL / MARGINAL / DO_NOT_DRILL** call.
 Today that workflow is fragmented across specialists, spreadsheets, and
 ad-hoc scripts, with no auditable record of *which* evidence drove *which*
 recommendation, and no consistent quality gate before a report is published.
 
-This project tackles that gap with a collaborative agent system: tools-first
+This project closes that gap with a collaborative agent system: tools-first
 domain reasoning, an independent evaluator that can **block** a low-quality
 report, and per-run JSONL traces so every recommendation is reproducible.
 
@@ -58,51 +58,31 @@ drilling decision.
 What it ships out of the box:
 
 - **15+ deterministic domain tools** (amplitude analysis, fault detection,
-  horizon picking, lithology, fluid ID, porosity/permeability/saturation,
+  horizon picking, lithology, fluid ID, porosity / permeability / saturation,
   pressure prediction, volumetrics, risk scoring, …).
-- **Five specialist agents** plus Planner, Evaluator, Research/Retriever,
+- **Five specialist agents** plus Planner, Evaluator, Research / Retriever,
   RAG, Memory, and Report-Generator agents — each emitting trace records
   with `agent_name`, `action`, `target_agent`, `confidence`, `status`.
-- **Critique / retry / escalation loops** controlled from `.env`:
-  `MAX_AGENT_ITERATIONS` caps the review cycle, `MAX_ITERATIONS` caps the
-  per-agent tool loop, and the manager auto-escalates to deterministic
-  `SAMPLE_MODE` after repeated live-API failures.
-- **REST API** (`/run`, alias `/analyze`), **CLI** (`python cli.py run …`),
-  and a **browser UI** with a sample-test-data dropdown, agent-collaboration
-  trace table, matplotlib decision dashboard, and final-verdict card.
-- **`use_case_id` round-trip** — every input/output example carries
+- **Critique / retry / escalation loops** controlled from `.env`
+  (`MAX_AGENT_ITERATIONS`, `MAX_ITERATIONS`), with auto-escalation to
+  deterministic `SAMPLE_MODE` after repeated live-API failures.
+- **REST API** (`POST /run`, alias `POST /analyze`), **CLI**
+  (`python cli.py run …`), and a **browser UI** with a sample-test-data
+  dropdown, an agent-collaboration trace table, a matplotlib decision
+  dashboard, and a final-verdict card.
+- **`use_case_id` round-trip** — every input / output example carries
   `use_case_id` as its first field; the live API echoes it back at the top
   level for end-to-end tracking.
-- **SAMPLE_MODE** that runs the full multi-agent flow with no API key
+- **SAMPLE_MODE** that runs the full multi-agent flow with **no API key**
   (perfect for demos and CI), plus a Compass-ready live LLM path.
-
----
-
-## Agents
-
-| Agent | Role | Key actions emitted to traces |
-| ----- | ---- | ----------------------------- |
-| **PlannerAgent** | Dynamic delegation — picks which specialists to run based on available evidence, prior critique, and RAG coverage. Triggers revision cycles. | `workflow_start`, `delegate`, `revision_requested`, `workflow_end` |
-| **ResearchAgent** | Loads local CSV / SEAM LAS evidence, normalizes inputs, and adds the SEG/SEAM open-data catalog for further validation. | `load_context` |
-| **RetrieverAgent** | Broadens the RAG query when coverage is `empty`/`weak`. Implements the retry loop. | `broaden_retry` |
-| **RAGAgent** | Tiny on-disk RAG over Compass embeddings; injects top-k chunks into shared memory. | `retrieve` |
-| **MemoryAgent** | Recalls prior runs for the same well/asset from `logs/persistent_memory.json`. | `recall` |
-| **SeismicAnalyzer** | Tool-first seismic interpretation: amplitude stats, anomaly/bright-spot detection, fault detection, horizon picking. | `execute` |
-| **WellLogInterpreter** | Petrophysics: lithology, fluid ID, porosity, permeability, saturation, pressure. | `execute` |
-| **ReservoirCharacterizer** | Integrates seismic + petrophysics into reservoir-quality and producibility view. | `execute` |
-| **ExplorationRiskAssessor** | Trap / seal / volumetric / risk scoring; outputs `risk_level`. | `execute` |
-| **EvaluatorAgent** | Independent critique. Scores `quality_score`, derives `risk_level`, and can **block** the Report Writer via `report_gate` until the quality threshold is met. | `evaluate`, `block_report_writer` |
-| **ReportGeneratorAgent** | Synthesizes the final executive + technical answer, citing tool outputs and evidence. Honors the evaluator's gate. | `produce_final_answer` |
-| **AgentExecutorManager** | Orchestrator that owns the per-run trace file, escalation state, and Compass LLM clients. | `llm_config_resolved`, `llm_call`, `llm_call_skipped`, `llm_call_failed` |
-
-Agent prompts and tool bindings live in [`app/agents.py`](app/agents.py)
-(`AGENT_INSTRUCTIONS`, `AGENT_CONFIGS`).
 
 ---
 
 ## Architecture
 
-### Control flow
+High-level control flow — the Planner delegates, Specialists execute,
+the Evaluator critiques, and either approves or sends the work back for
+one more iteration (bounded by `MAX_AGENT_ITERATIONS`):
 
 ```
                 ┌──────────────┐
@@ -124,46 +104,70 @@ Agent prompts and tool bindings live in [`app/agents.py`](app/agents.py)
                                          └──────────────────┘
 ```
 
-1. **Plan** — `PlannerAgent` selects specialists based on which inputs are
-   present (`seismic_data`, `well_log_data`, prior `evaluation.weak_outputs`,
-   `risk_level==HIGH`, RAG coverage).
-2. **Research** — `ResearchAgent` loads local CSV/LAS evidence; `RAGAgent`
+1. **Plan** — `PlannerAgent` picks specialists based on the inputs present
+   (`seismic_data`, `well_log_data`), prior `evaluation.weak_outputs`,
+   `risk_level==HIGH`, and current RAG coverage.
+2. **Research** — `ResearchAgent` loads local CSV / LAS evidence; `RAGAgent`
    pulls top-k chunks; `MemoryAgent` recalls prior runs for this well.
 3. **Execute (parallel)** — `SeismicAnalyzer` and `WellLogInterpreter` run
    concurrently via `asyncio.gather`; `ReservoirCharacterizer` and
    `ExplorationRiskAssessor` chain after them (dependency-aware).
 4. **Evaluate** — `EvaluatorAgent` computes `quality_score` from tool
    success, synthesis success, evidence count, RAG coverage, and missing
-   inputs. Sets `report_gate.may_publish`.
-5. **Feedback loop** — if `!approved`, the Planner runs another iteration:
-   broadens RAG retrieval, reloads context, retries specialists. The loop
-   is bounded by **`MAX_AGENT_ITERATIONS`** (default 3, from `.env`).
-6. **Finalize** — `ReportGeneratorAgent` produces the synthesis, but
-   **only if the evaluator's gate allows it**; otherwise the response is
-   marked `status: "blocked"` with the blocking reasons exposed.
+   inputs, and sets `report_gate.may_publish`.
+5. **Iterate / Finalize** — if `!approved`, the Planner re-runs the cycle
+   (broaden RAG, reload context, retry specialists). When approved,
+   `ReportGeneratorAgent` produces the final synthesis; otherwise the
+   response is marked `status: "blocked"` with the blocking reasons exposed.
 
-### Feedback / safety loops
+### Layered view
 
-| Loop | Where | Bound by |
-| ---- | ----- | -------- |
-| Per-agent tool loop (LangChain) | `_create_agent_executor` | `MAX_ITERATIONS` (env, default 10) |
-| Planner → Executor → Evaluator review cycle | `execute_collaborative_workflow_async` | **`MAX_AGENT_ITERATIONS`** (env, default 3) |
-| RAG broaden-retry on `empty`/`weak` coverage | `_broaden_retrieval` | RAG's internal retry list |
-| LLM payload-size retry (Core42 400 / context) | `_invoke_reasoning_llm` | 2 attempts (full + ¼ budget) |
-| Escalation to deterministic SAMPLE_MODE | `_llm_failure_streak` | `_llm_failure_threshold = 3` |
-| Role-authority gate (Evaluator → Report Writer) | `_finalize_report` | `report_gate.may_publish` |
+| Layer | Responsibility | Modules |
+| ----- | -------------- | ------- |
+| **Coordination** | Planning, evaluation, role-authority gating, report synthesis | `app/agents.py` (Planner / Evaluator / ReportGenerator / `AgentExecutorManager`) |
+| **Context** | Local data, RAG embeddings, persistent cross-run memory | `app/data_sources.py`, `app/rag.py`, `app/memory.py` |
+| **Specialists** | Seismic / well-log / reservoir / risk reasoning | `app/agents.py` (`SeismicAnalyzer`, `WellLogInterpreter`, `ReservoirCharacterizer`, `ExplorationRiskAssessor`) |
+| **Tools** | 15+ deterministic domain functions | `app/tools.py`, `app/petrophysics.py` |
+| **Surface** | REST API, CLI, browser UI | `run.py` (FastAPI, port 8000), `cli.py`, `run_ui.py` (browser UI, port 8001) |
+| **Observability** | Per-run JSONL traces, structured events, persistent memory | `app/logging_utils.py`, `app/observability.py`, `app/logging_config.py` |
 
-### Domain tools
+Full architecture document: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-All 15 registered tools live in [`app/tools.py`](app/tools.py) and are
-wired to agents through `AGENT_CONFIGS` in [`app/config.py`](app/config.py).
-Every tool is **deterministic** — it produces identical output for identical
-input, so `SAMPLE_MODE` can run the full workflow without a single LLM call.
+---
+
+## Agents & Tools interaction
+
+### Agents
+
+| Agent | Role | Key trace actions |
+| ----- | ---- | ----------------- |
+| **PlannerAgent** | Dynamic delegation — picks which specialists to run based on available evidence, prior critique, and RAG coverage. Triggers revision cycles. | `workflow_start`, `delegate`, `revision_requested`, `workflow_end` |
+| **ResearchAgent** | Loads local CSV / SEAM LAS evidence, normalizes inputs, and adds the SEG/SEAM open-data catalog for validation. | `load_context` |
+| **RetrieverAgent** | Broadens the RAG query when coverage is `empty`/`weak`. Implements the retry loop. | `broaden_retry` |
+| **RAGAgent** | Tiny on-disk RAG over Compass embeddings; injects top-k chunks into shared memory. | `retrieve` |
+| **MemoryAgent** | Recalls prior runs for the same well/asset from `logs/persistent_memory.json`. | `recall` |
+| **SeismicAnalyzer** | Tool-first seismic interpretation: amplitude stats, anomaly / bright-spot detection, fault detection, horizon picking. | `execute` |
+| **WellLogInterpreter** | Petrophysics: lithology, fluid ID, porosity, permeability, saturation, pressure. | `execute` |
+| **ReservoirCharacterizer** | Integrates seismic + petrophysics into reservoir-quality and producibility view. | `execute` |
+| **ExplorationRiskAssessor** | Trap / seal / volumetric / risk scoring; outputs `risk_level`. | `execute` |
+| **EvaluatorAgent** | Independent critique. Scores `quality_score`, derives `risk_level`, and can **block** the Report Writer via `report_gate` until the quality threshold is met. | `evaluate`, `block_report_writer` |
+| **ReportGeneratorAgent** | Synthesizes the final executive + technical answer, citing tool outputs. Honors the evaluator's gate. | `produce_final_answer` |
+| **AgentExecutorManager** | Orchestrator that owns the per-run trace file, escalation state, and Compass LLM clients. | `llm_config_resolved`, `llm_call`, `llm_call_skipped`, `llm_call_failed` |
+
+Agent prompts and tool bindings live in [`app/agents.py`](app/agents.py)
+(`AGENT_INSTRUCTIONS`, `AGENT_CONFIGS`).
+
+### Tools
+
+All registered tools live in [`app/tools.py`](app/tools.py) and are wired
+to agents through `AGENT_CONFIGS` in [`app/config.py`](app/config.py).
+Every tool is **deterministic** — identical input ⇒ identical output, so
+`SAMPLE_MODE` can run the full workflow without a single LLM call.
 
 | Category | Tool | Used by | What it does |
 | -------- | ---- | ------- | ------------ |
 | 🌊 **Seismic** | `analyze_seismic_amplitude` | `SeismicAnalyzer` | Amplitude stats + anomaly / bright-spot detection |
-| 🌊 **Seismic** | `detect_faults` | `SeismicAnalyzer` | Fault-structure detection with `fault_count`, `fault_severity`, `risk_level` |
+| 🌊 **Seismic** | `detect_faults` | `SeismicAnalyzer` | Fault-structure detection (`fault_count`, `fault_severity`, `risk_level`) |
 | 🌊 **Seismic** | `pick_horizons` | `SeismicAnalyzer` | Top-N reflector picking for structure mapping |
 | 📊 **Well-log** | `classify_lithology` | `WellLogInterpreter` | Lithology from gamma-ray + resistivity (`sand` / `shale` / `carbonate`) |
 | 📊 **Well-log** | `identify_fluids` | `WellLogInterpreter` | Fluid ID (`oil` / `gas` / `water` / `mixed`) |
@@ -176,19 +180,20 @@ input, so `SAMPLE_MODE` can run the full workflow without a single LLM call.
 | ⚠️ **Risk** | `assess_seal_integrity` | `ExplorationRiskAssessor` | Seal-rock integrity + cap-rock confidence |
 | 📝 **Report** | `synthesize_analysis` | `ReportGeneratorAgent` | Cross-discipline synthesis of all agent findings |
 | 📝 **Report** | `create_visualizations` | `ReportGeneratorAgent` | Plot specs consumed by the dashboard's matplotlib renderer |
-| 📝 **Report** | `format_recommendations` | `ReportGeneratorAgent` | Final **DRILL / MARGINAL / DO_NOT_DRILL** recommendation packaging |
+| 📝 **Report** | `format_recommendations` | `ReportGeneratorAgent` | Final **DRILL / MARGINAL / DO_NOT_DRILL** packaging |
 
-Plus a **petrophysics co-pilot** (`app/petrophysics.py`) with its own
-tool surface — `load_well_log`, `compute_petrophysics`, `plot_well_logs`,
-`summarize_pay_zones`, `critique_petrophysics` — invoked directly from
-the LAS-driven workflow when a SEAM `.las` file is provided.
+Plus a **petrophysics co-pilot** ([`app/petrophysics.py`](app/petrophysics.py))
+with its own tool surface — `load_well_log`, `compute_petrophysics`,
+`plot_well_logs`, `summarize_pay_zones`, `critique_petrophysics` — invoked
+directly from the LAS-driven workflow when a SEAM `.las` file is provided.
 
 Each tool call is emitted to the JSONL trace as a single record:
+
 ```json
 {"agent_name":"SeismicAnalyzer","action":"tool:detect_faults","input_summary":"...","output_summary":"{\"fault_count\": 1, \"risk_level\": \"LOW\"}","status":"success"}
 ```
 
-### Agents ↔ Tools interaction map
+### Interaction map
 
 ```mermaid
 flowchart LR
@@ -335,18 +340,64 @@ flowchart LR
 
 </details>
 
-Full architecture document: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+---
+
+## Feedback loops & dynamic behavior
+
+The system is intentionally **non-linear** — agents branch on confidence,
+missing data, risk level, and prior critique. Seven dynamic behaviors are
+wired into the orchestration:
+
+| Capability | Where (`app/`) | What it does |
+| ---------- | -------------- | ------------ |
+| **Dynamic delegation** | `_planner_delegate` (`agents.py`) | Planner asks the Retriever for more RAG context only when coverage is `empty`/`weak`, and skips specialists whose inputs are missing. |
+| **Critique loop** | `_evaluate_iteration` + `_finalize_report` (`agents.py`) | Evaluator rejects a synthesis that lacks evidence and sends it back to the Planner with `weak_outputs`. |
+| **Retry / broaden retrieval** | `rag.retrieve_with_retry`, `_broaden_retrieval` (`rag.py`, `agents.py`) | Retriever automatically broadens the query if the first search returns no chunks. |
+| **Shared memory** | `AgentState.shared_memory` (`agents.py`), `memory.py` | All agents read/write a common run-state object; persistent memory survives across runs, keyed by well/asset. |
+| **Escalation** | `_llm_failure_streak` / `_llm_escalated` (`agents.py`) | After `_llm_failure_threshold` (3) consecutive live-API failures, the manager auto-escalates to deterministic `SAMPLE_MODE` so the run still completes. |
+| **Role authority** | `report_gate.may_publish` (`agents.py`) | Evaluator can **block** the Report Writer until the `quality_score` threshold is met; the response is marked `status: "blocked"` with the blocking reasons exposed. |
+| **Non-linear workflow** | `execute_collaborative_workflow_async` (`agents.py`) | Agents branch on `confidence`, `risk_level`, `missing_inputs`; the loop is bounded by `MAX_AGENT_ITERATIONS`. |
+
+### Loop bounds (all configurable via `.env`)
+
+| Loop | Where | Bound by |
+| ---- | ----- | -------- |
+| Per-agent tool loop (LangChain) | `_create_agent_executor` | `MAX_ITERATIONS` (env, default `10`) |
+| Planner → Executor → Evaluator review cycle | `execute_collaborative_workflow_async` | **`MAX_AGENT_ITERATIONS`** (env, default `3`) |
+| RAG broaden-retry on `empty`/`weak` coverage | `_broaden_retrieval` | RAG's internal retry list |
+| LLM payload-size retry (Core42 400 / context) | `_invoke_reasoning_llm` | 2 attempts (full + ¼ budget) |
+| Escalation to deterministic SAMPLE_MODE | `_llm_failure_streak` | `_llm_failure_threshold = 3` |
+| Role-authority gate (Evaluator → Report Writer) | `_finalize_report` | `report_gate.may_publish` |
+
+### Supporting capabilities
+
+| Capability | Where |
+| ---------- | ----- |
+| Async orchestration | `_run_agents_parallel` runs independent specialists via `asyncio.gather` |
+| RAG | `app/rag.py` — Compass embeddings + on-disk index |
+| Tool-first execution | `app/tools.py` — 15+ deterministic domain tools |
+| Observability | `app/observability.py` — JSONL events + optional OpenTelemetry spans |
+| Per-run trace | `app/logging_utils.py` → `logs/agent_trace_*.jsonl` |
+| Structured logging | `app/logging_config.py` — JSON-lines in production |
+| Sample mode | `SAMPLE_MODE=true` runs end-to-end with no API key |
+
+A complete annotated trace example lives in
+[docs/SAMPLE_MODE.md](docs/SAMPLE_MODE.md). Architecture and agent
+contracts: [docs/AGENTS.md](docs/AGENTS.md) and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
 ## Compass Integration
 
-This project uses **Compass** (Core42 OpenAI-compatible gateway) via:
+This project uses **Compass** (Core42 OpenAI-compatible gateway) via two
+env vars — both sourced **strictly** from the environment / `.env`, never
+hard-coded in source:
 
 | Env var | Purpose | Required? |
 | ------- | ------- | --------- |
-| `OPENAI_API_KEY` | Compass API key (read **only** from the environment / `.env`). Never hard-coded. | Required for live LLM calls |
-| `OPENAI_BASE_URL` | Gateway base URL. Falls back to `https://api.core42.ai/v1` when unset, and the chosen value + its source (`env` vs `default-fallback`) is logged at startup. | Optional |
+| `OPENAI_API_KEY` | Compass API key. Read only from env / `.env`. Never printed to logs (not even masked — startup logs show `configured` / `not configured` and the source). | Required for live LLM calls |
+| `OPENAI_BASE_URL` | Gateway base URL. Falls back to `https://api.core42.ai/v1` when unset; the resolved value + its source (`env` vs `default-fallback`) is logged once at startup. | Optional |
 
 Models (overridable via env):
 
@@ -368,21 +419,41 @@ every response includes `"mode": "tool_only"` so it's obvious.
 
 ---
 
-## Setup
+## Setup & Running Steps
+
+### 1. Install
+
+```bash
+git clone https://github.com/your-org/oil-gas-analytics.git
+cd oil-gas-analytics
+
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
-pip install -r requirements.txt
-python run.py
+# Edit .env: either fill OPENAI_API_KEY (live mode) or set SAMPLE_MODE=true.
+# Empty values in .env are IGNORED — `export OPENAI_API_KEY=...` also works.
 ```
 
-Then in a second terminal start the dashboard:
+Important variables (full list in [`.env.example`](.env.example)):
 
-```bash
-python run_ui.py          # http://localhost:8001
-```
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `OPENAI_API_KEY` | _unset_ | Required for live LLM calls. Never hard-coded. |
+| `OPENAI_BASE_URL` | `https://api.core42.ai/v1` (fallback) | Compass / OpenAI / Azure gateway URL. |
+| `SAMPLE_MODE` | `false` | When `true`, runs end-to-end with no API key. |
+| `MAX_AGENT_ITERATIONS` | `3` | Planner ↔ Evaluator review-cycle cap. |
+| `MAX_ITERATIONS` | `10` | LangChain per-agent tool-loop cap. |
+| `API_PORT` / `UI_PORT` | `8000` / `8001` | HTTP server ports. |
+| `LOG_LEVEL` / `JSON_LOGS` | `INFO` / `false` | Logging verbosity & format. |
 
-Or skip the API key entirely and run a single example end-to-end:
+### 3. Run — pick one
+
+**A. Zero-API-key demo (CI + offline + first-look)**
 
 ```bash
 SAMPLE_MODE=true python cli.py run \
@@ -390,86 +461,71 @@ SAMPLE_MODE=true python cli.py run \
   --output /tmp/result.json
 ```
 
-
-
-## Quickstart
-
-### 1. Run in 30 seconds, no API key (SAMPLE_MODE)
-
-```bash
-git clone https://github.com/your-org/oil-gas-analytics && cd oil-gas-analytics
-pip install -r requirements.txt
-
-# Sample mode = deterministic tool execution, full agent collaboration,
-# zero LLM calls (the perfect demo + CI mode).
-SAMPLE_MODE=true python cli.py analyze \
-  --input input_examples/example_1_northfield.json \
-  --output /tmp/result.json
-```
-
 You'll see one line of JSON per agent step (the trace stream), and the
-final analysis lands in `/tmp/result.json`. The same workflow also runs in
-this directory's tests (`make test` => 39 passing).
+final analysis lands in `/tmp/result.json`. The same workflow powers the
+test suite (`make test` ⇒ 39 passing).
 
-### 2. Run with a real LLM (Compass / OpenAI / Azure)
+**B. Full stack (API + browser dashboard)**
 
 ```bash
-cp .env.example .env
-$EDITOR .env                    # fill OPENAI_API_KEY (and base URL if needed)
+# Terminal 1 — start FastAPI on :8000
+python run.py
 
-make run                        # API on :8000, UI on :8001
-# or:
-docker build -t oga . && docker run --env-file .env -p 8000:8000 -p 8001:8001 oga
+# Terminal 2 — start the dashboard on :8001
+python run_ui.py
 ```
 
-Open:
+Then open:
 
 - API docs:    http://localhost:8000/docs
 - UI:          http://localhost:8001
 - Health:      http://localhost:8000/health
 - Readiness:   http://localhost:8000/readyz
 
-## Run with Docker
+The dashboard's **sample catalogue** dropdown loads both success and
+failure inputs from `input_examples/`, calls `POST http://localhost:8000/run`,
+renders an agent-collaboration trace table, a matplotlib decision
+dashboard, and the final **DRILL / MARGINAL / DO_NOT_DRILL** verdict card.
+It does *not* require `OPENAI_API_KEY` itself — it only checks that the
+API server is reachable.
+
+**C. Direct REST call** — `POST /run` (alias `POST /analyze`)
 
 ```bash
-# Build
-
-git clone https://github.com/pmuthuvel1/OilandGasAnalytics.git
-
-cd OilandGasAnalytics
-cp .env.exmple .env
-
-docker build -t oil-gas-analytics-agents:latest .
-
-before running the Docker image, Please set or export OPENAI_API_KEY depends on Windows or linux
-
-For Linux
-export OPENAI_API_KEY=xxxx
-
-For Windows
-set OPENAI_API_KEY=xxxx 
-
-Run docker image with below Options.
-
-Option 1: with .env file
-
-# Run with secrets injected from a file (recommended)
-docker run --rm -p 8000:8000 -p 8001:8001 \
-   -e OPENAI_API_KEY=$OPENAI_API_KEY \
-   -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
-   --env-file .env \
-   -v $(pwd)/logs:/app/logs \
-  oil-gas-analytics-agents:latest
-
-Option 2: use .env file inside the docker image
-
-docker run --rm -p 8000:8000 -p 8001:8001 \
- -e OPENAI_API_KEY=$OPENAI_API_KEY \
- -e OPENAI_BASE_URL=https://api.core42.ai/v1 \
- -v $(pwd)/logs:/app/logs \
- oil-gas-analytics-agents:latest
-
+curl -X POST "http://localhost:8000/run" \
+  -H "Content-Type: application/json" \
+  -d @input_examples/example_1_northfield.json
 ```
+
+The response echoes back `use_case_id` at the top level for end-to-end
+tracking.
+
+### 4. Make targets (dev shortcuts)
+
+```bash
+make help              # show all targets
+make install-dev       # pip install dev tooling (pytest, ruff, mypy, …)
+make run               # API on :8000, UI on :8001
+make ci                # ruff + mypy + pytest with coverage
+make examples          # regenerate output_examples/ from input_examples/
+make analyze INPUT=input_examples/example_4_deepwater_gulf.json
+```
+
+### 5. Docker
+
+```bash
+docker build -t oga:latest .
+docker run --rm -p 8000:8000 -p 8001:8001 \
+  --env-file .env \
+  -v $(pwd)/logs:/app/logs \
+  oga:latest
+```
+
+Production deployment (Kubernetes manifests, gunicorn tuning, zero-downtime
+rollouts): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Troubleshooting (Core42 400s, env loading, RAG):
+[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
 ---
 
 ## Bundled examples
@@ -546,7 +602,20 @@ Troubleshooting (Core42 400s, env loading, RAG): [docs/TROUBLESHOOTING.md](docs/
 
 ---
 
+## CLI
 
+```bash
+oilgas --help                                                  # via `pip install -e .`
+python cli.py --help                                           # without install
+python cli.py run     --input input_examples/example_1_northfield.json --quick
+python cli.py analyze --input input_examples/example_1_northfield.json   # alias of `run`
+python cli.py batch   --input-dir input_examples --output-dir runs/$(date +%s)
+python cli.py info
+python cli.py tools
+python cli.py examples
+python cli.py regen-outputs            # rebuild output_examples/ in SAMPLE_MODE
+python cli.py regen-outputs --check    # exit 1 if outputs are stale (CI)
+```
 
 ---
 
@@ -557,8 +626,10 @@ Troubleshooting (Core42 400s, env loading, RAG): [docs/TROUBLESHOOTING.md](docs/
 | GET    | `/health`                     | Liveness probe                                       |
 | GET    | `/readyz`                     | Readiness probe (checks LLM configuration)          |
 | GET    | `/info`                       | Redacted system + config snapshot                    |
-| POST   | `/run`                    | Run the full or quick analysis workflow              |
-| POST   | `/analyze/batch`              | Batch analysis across multiple wells                 |
+| POST   | `/run`                        | **Canonical** — run the full or quick analysis workflow |
+| POST   | `/analyze`                    | Alias of `/run` (back-compat)                        |
+| POST   | `/run/batch`                  | Batch analysis across multiple wells                 |
+| POST   | `/analyze/batch`              | Alias of `/run/batch` (deprecated)                   |
 | POST   | `/tools/{tool_name}`          | Call any registered tool directly                    |
 | GET    | `/tools`                      | List tools and categories                            |
 | POST   | `/upload/seismic`             | Upload seismic CSV (≤ MAX_REQUEST_BYTES)             |
@@ -569,38 +640,11 @@ Troubleshooting (Core42 400s, env loading, RAG): [docs/TROUBLESHOOTING.md](docs/
 | GET    | `/events/tail?n=50`           | Tail the JSONL observability log                     |
 | GET    | `/logs/download`              | Download analysis log file                           |
 
-Full docs: [docs/API.md](docs/API.md).
+The request body for `POST /run` is the JSON shape in `input_examples/*.json`
+(starting with `use_case_id`); the response echoes `use_case_id` at the top
+level for end-to-end tracking. Full docs: [docs/API.md](docs/API.md).
 
 ---
-
----
-
-## Capabilities of this project
-
-this is a deployable multi-agent system that ships:
-
-| Capability               | Where                                                     |
-| ------------------------ | --------------------------------------------------------- |
-| Dynamic delegation       | `_planner_delegate` in `app/agents.py`                    |
-| Critique loop            | `_evaluate_iteration` + `_finalize_report` (role gate)    |
-| Retry / broaden retrieval| `rag.retrieve_with_retry`, `_broaden_retrieval`           |
-| Shared memory            | `AgentState.shared_memory`, `app/memory.py` (cross-run)   |
-| Escalation               | `_llm_escalated` switch to deterministic sample mode      |
-| Role authority           | Evaluator can `block_report_writer` via `report_gate`     |
-| Non-linear flow          | Iteration-loop with quality / risk branching              |
-| Async orchestration      | `_run_agents_parallel` (independent agents in parallel)   |
-| RAG                      | `app/rag.py` (Compass embeddings, on-disk index)          |
-| Tool-first execution     | `app/tools.py` (15+ deterministic domain tools)           |
-| Observability            | `app/observability.py` (JSONL events + optional OTel)     |
-| Per-run trace            | `app/logging_utils.py` → `logs/agent_trace_*.jsonl`       |
-| Structured logging       | `app/logging_config.py` (JSON-lines in production)        |
-| Sample mode              | `SAMPLE_MODE=true` runs end-to-end with no API key        |
-
-A complete trace example is in [docs/SAMPLE_MODE.md](docs/SAMPLE_MODE.md).
-Architecture, agent contracts, and deployment notes live under [`docs/`](docs/).
-
----
-
 
 ## Observability
 
@@ -620,8 +664,47 @@ Loki, or any ELK pipeline.
 
 ---
 
+## Production deployment
 
+```bash
+# Build
+docker build -t oga:latest .
 
+# Run with secrets injected from a file (recommended)
+docker run --rm -p 8000:8000 -p 8001:8001 \
+  --env-file production.env \
+  -v $(pwd)/logs:/app/logs \
+  oga:latest
+```
+
+Key production knobs (see [`.env.example`](.env.example) for the full list):
+
+- `APP_ENV=production` — enables hard validation of secrets and CORS
+- `CORS_ORIGINS=https://app.example.com` — never `*` in production
+- `JSON_LOGS=true` — structured log lines
+- `WEB_CONCURRENCY=4` / `GUNICORN_TIMEOUT=180`
+- `OBS_EVENT_FILE` / `PERSISTENT_MEMORY_FILE` / `RAG_INDEX_FILE` for
+  shared volumes when running multiple replicas
+
+Container ships with `tini` as PID 1 and `app:app` (non-root) for safer
+process lifecycle. A `HEALTHCHECK` is built in. See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Kubernetes manifests, gunicorn
+tuning, and zero-downtime rollouts.
+
+---
+
+## Contributing
+
+1. `make install-dev`
+2. Create a feature branch, follow [CONTRIBUTING.md](CONTRIBUTING.md).
+3. `make ci` should be green locally before opening a PR.
+4. New input examples? Add the JSON to `input_examples/`, then run
+   `make examples` to materialize the matching `output_examples/<...>_output.json`.
+
+Security issues: please follow [SECURITY.md](SECURITY.md) instead of opening
+public GitHub issues.
+
+---
 
 ## License
 
