@@ -37,9 +37,10 @@ this Agentic AI Solution will provide accurate Analysis result.
 ## Problem Statement
 
 **Use Case ID:** 4
+
 **Problem:** Oil & Gas Seismic Data and Well Information Analyser for drilling.
 
-Geologists and Petrophysicists must analyze vast volumes of complex numerical and geological data to determine whether a well should be classified as **DRILL**, **MARGINAL**, or **DO_NOT_DRILL**. These decisions are critical, as even a minor interpretation error can result in millions of dollars in financial losses.
+In Oil and Gas Industries, Geologists and Petrophysicists must analyze vast volumes of complex numerical and geological data to determine whether a well should be classified as **DRILL**, **MARGINAL**, or **DO_NOT_DRILL**. These decisions are critical, as even a minor interpretation error can result in millions of dollars in financial losses.
 
 Traditional human-driven analysis is susceptible to errors caused by data complexity, cognitive bias, fatigue, or oversight. A potentially profitable drilling location may be incorrectly classified as **DO_NOT_DRILL**, leading to missed revenue opportunities. Conversely, a non-viable location may be mistakenly approved for drilling, resulting in significant capital expenditure and operational losses.
 
