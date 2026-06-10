@@ -451,7 +451,18 @@ Important variables (full list in [`.env.example`](.env.example)):
 | `API_PORT` / `UI_PORT` | `8000` / `8001` | HTTP server ports. |
 | `LOG_LEVEL` / `JSON_LOGS` | `INFO` / `false` | Logging verbosity & format. |
 
-### 3. Run — pick one
+### 3. Docker
+
+```bash
+docker build -t OilandGasAnalysisAgents:latest .
+docker run --rm -p 8000:8000 -p 8001:8001 \
+  --env-file .env \
+  -v $(pwd)/logs:/app/logs \
+  OilandGasAnalysisAgents:latest
+```
+
+---
+### 4. Run — pick one
 
 **A. Zero-API-key demo (CI + offline + first-look)**
 
@@ -511,22 +522,7 @@ make examples          # regenerate output_examples/ from input_examples/
 make analyze INPUT=input_examples/example_4_deepwater_gulf.json
 ```
 
-### 5. Docker
 
-```bash
-docker build -t oga:latest .
-docker run --rm -p 8000:8000 -p 8001:8001 \
-  --env-file .env \
-  -v $(pwd)/logs:/app/logs \
-  oga:latest
-```
-
-Production deployment (Kubernetes manifests, gunicorn tuning, zero-downtime
-rollouts): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
-Troubleshooting (Core42 400s, env loading, RAG):
-[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
-
----
 
 ## Bundled examples
 
