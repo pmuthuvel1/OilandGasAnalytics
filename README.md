@@ -479,19 +479,19 @@ test suite (`make test` ⇒ 39 passing).
 
 ### 5. How to Test with UI
 
-Run run_ui.py 
+Run python run_ui.py  along with python run.py for APIs
 
 Goto http://localhost:8001
 
-you will see the below home page , select a option from the drop down , and click on the Load button
+you will see the below home page , select a Oil and Gas Analysis Test Sample option from the **Sample Catalogue** drop down , 
 
 ![Image description](images/oilgas_home.png)
 
-it will call AI Agent Background to process the above selected records
+and click on the **Load into Form** button. This will call AI Agents in the Background to process the above selected Sample Oil and Gas information, you can Edit any details, in the sample records, provided they are Numbers.
 
 ![Image description](images/oilgas_loaddata.png)
 
-you will see the below result page. which will where DRILL can be done the selected location and whether it is Profitable or NOT.
+you will see the below result page. which will tell, DRILL in the selected location and can be Profitable or NOT.
 
 ![Image description](images/oilgas_result.png)
 
