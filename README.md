@@ -491,7 +491,7 @@ and click on the **Load into Form** button. This will call AI Agents in the Back
 
 ![Image description](images/oilgas_loaddata.png)
 
-you will see the below result page. which will tell, DRILL in the selected location and can be Profitable or NOT.
+you will see the below result page. which will tell, whether DRILLing in the selected location can be Profitable or NOT, in few minutes.
 
 ![Image description](images/oilgas_result.png)
 
