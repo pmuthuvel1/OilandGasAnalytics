@@ -477,7 +477,7 @@ You'll see one line of JSON per agent step (the trace stream), and the
 final analysis lands in `/tmp/result.json`. The same workflow powers the
 test suite (`make test` ⇒ 39 passing).
 
-### 5. How to Test with UI
+**B. How to Test with UI**
 
 Run python run_ui.py  along with python run.py for APIs
 
@@ -497,7 +497,7 @@ you will see the below result page. which will tell, DRILL in the selected locat
 
 
 
-**B. Full stack (API + browser dashboard)**
+**C. Full stack (API + browser dashboard)**
 
 ```bash
 # Terminal 1 — start FastAPI on :8000
@@ -521,7 +521,7 @@ dashboard, and the final **DRILL / MARGINAL / DO_NOT_DRILL** verdict card.
 It does *not* require `OPENAI_API_KEY` itself — it only checks that the
 API server is reachable.
 
-**C. Direct REST call** — `POST /run` (alias `POST /analyze`)
+**D. Direct REST call** — `POST /run` (alias `POST /analyze`)
 
 ```bash
 curl -X POST "http://localhost:8000/run" \
