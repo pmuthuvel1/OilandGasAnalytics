@@ -477,6 +477,26 @@ You'll see one line of JSON per agent step (the trace stream), and the
 final analysis lands in `/tmp/result.json`. The same workflow powers the
 test suite (`make test` ⇒ 39 passing).
 
+### 5. How to Test with UI
+
+Run run_ui.py 
+
+Goto http://localhost:8001
+
+you will see the below home page , select a option from the drop down , and click on the Load button
+
+![Image description](images/oilgas_home.png)
+
+it will call AI Agent Background to process the above selected records
+
+![Image description](images/oilgas_loaddata.png)
+
+you will see the below result page. which will where DRILL can be done the selected location and whether it is Profitable or NOT.
+
+![Image description](images/oilgas_result.png)
+
+
+
 **B. Full stack (API + browser dashboard)**
 
 ```bash
